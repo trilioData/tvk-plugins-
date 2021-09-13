@@ -16,6 +16,7 @@ on:
       - 'hack/update-preflight-manifest.sh'
       - 'hack/update-log-collector-manifest.sh'
       - 'hack/update-target-browser-manifest.sh'
+      - 'hack/update-cleanup-manifest.sh'
       - '.github/workflows/plugin-manifests.yml'
 
 env:
@@ -24,12 +25,14 @@ env:
 
 jobs:
   # pre-build job runs yaml lint, shell lint, golangci-lint and detects file changes to sets job variables which will be used to
-  # decide whether to run subsequent jobs(build_test_preflight, build_test_log-collector and build_test_target-browser)
+  # decide whether to run subsequent jobs(build_test_preflight, build_test_cleanup, build_test_log-collector and build_test_target-browser)
   pre-build:
     runs-on: ubuntu-latest
     outputs:
       preflight: ${{ steps.filter.outputs.preflight }}
       testPreflight: ${{ steps.filter.outputs.testPreflight }}
+      cleanup: ${{ steps.filter.outputs.cleanup }}
+      testCleanup: ${{ steps.filter.outputs.testCleanup }}
       logCollector: ${{ steps.filter.outputs.logCollector }}
       targetBrowser: ${{ steps.filter.outputs.targetBrowser }}
       testTargetBrowser: ${{ steps.filter.outputs.testTargetBrowser }}
@@ -75,6 +78,16 @@ jobs:
               - '.krew/tvk-preflight.yaml'
             testPreflight:
               - *sharedPreflight
+
+            sharedCleanup: &sharedCleanup
+              - *shared
+              - 'tools/cleanup/**'
+              - 'tests/cleanup/**'
+            cleanup:
+              - *sharedCleanup
+              - '.krew/tvk-cleanup.yaml'
+            testCleanup:
+              - *sharedCleanup
 
             logCollector:
               - *shared
@@ -145,6 +158,57 @@ jobs:
         path: |
           build/preflight.tar.gz
           build/preflight-sha256.txt
+
+  # build_test_cleanup job build cleanup packages, runs integration tests and tests packages for plugin creation(install, uninstall)
+  # upload cleanup packages to github artifacts if tags('/ref/tags') are pushed
+  build_test_cleanup:
+    runs-on: ubuntu-latest
+    needs: pre-build
+    # for tags('ref/tags/'), 'needs.pre-build.outputs.cleanup' will be 'false' so to run 'build_test_cleanup' job on tags as well,
+    # added condition 'startsWith(github.ref, 'refs/tags/')'
+    if: (needs.pre-build.outputs.cleanup == 'true') || startsWith(github.ref, 'refs/tags/')
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build Cleanup Package
+      run: make build-cleanup
+
+      #- name: Set up Cloud SDK
+      #if: (needs.pre-build.outputs.testCleanup == 'true') || startsWith(github.ref, 'refs/tags/')
+      #uses: google-github-actions/setup-gcloud@master
+      #with:
+      #  project_id: ${{ secrets.GCS_PROJECT_ID }}
+      #  service_account_key: ${{ secrets.GKE_SA_KEY }}
+      #  export_default_credentials: true
+
+      #- name: Authenticate and Connect to GKE cluster
+      #if: (needs.pre-build.outputs.testCleanup == 'true') || startsWith(github.ref, 'refs/tags/')
+      #uses: google-github-actions/get-gke-credentials@main
+      #with:
+      #  cluster_name: ${{ env.GKE_CLUSTER }}
+      #  location: ${{ env.GKE_ZONE }}
+      #  use_auth_provider: true
+      #  credentials: ${{ secrets.GKE_SA_KEY }}
+
+      #- name: Run Cleanup Integration Tests
+      #if: (needs.pre-build.outputs.testCleanup == 'true') || startsWith(github.ref, 'refs/tags/')
+      #run: make test-cleanup-integration
+
+    - name: Ensure Required Utilities Installed
+      run: make install-required-utilities
+
+    - name: Test Cleanup Plugin Locally
+      run: make test-cleanup-plugin-locally
+
+    - name: Upload Cleanup Plugin Packges to github artifact
+      uses: actions/upload-artifact@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: cleanup
+        path: |
+          build/cleanup.tar.gz
+          build/cleanup-sha256.txt
 
   # build_test_log-collector job builds log-collector package and tests package for plugin creation(install, uninstall)
   build_test_log-collector:
@@ -257,14 +321,15 @@ jobs:
         run: make test-target-browser-plugin-locally
 
   # pre-release job determines whether to create release or not and sets job variables which will be used to decide
-  # what packages(preflight, log-collector, target-browser) should be included in release
+  # what packages(preflight, cleanup, log-collector, target-browser) should be included in release
   pre-release:
     runs-on: ubuntu-latest
-    needs: [build_test_preflight, build_test_log-collector, build_test_target-browser]
+    needs: [build_test_preflight, build_test_log-collector, build_test_target-browser, build_test_cleanup]
     if: startsWith(github.ref, 'refs/tags/')
     outputs:
       create_release: ${{ steps.detect_changes.outputs.create_release }}
       release_preflight: ${{ steps.detect_changes.outputs.release_preflight }}
+      release_cleanup: ${{ steps.detect_changes.outputs.release_cleanup }}
       release_log_collector: ${{ steps.detect_changes.outputs.release_log_collector }}
       release_target_browser: ${{ steps.detect_changes.outputs.release_target_browser }}
     steps:
@@ -293,10 +358,18 @@ jobs:
           name: preflight
           path: build
 
+      - name: Download Cleanup Packages from Artifact
+        uses: actions/download-artifact@v2
+        if: needs.pre-release.outputs.release_cleanup == 'true'
+        with:
+          name: cleanup
+          path: build
+
       - name: Update GoReleaser Config for Release
         run: hack/update-goreleaser-yaml.sh
         env:
           release_preflight: ${{needs.pre-release.outputs.release_preflight}}
+          release_cleanup: ${{needs.pre-release.outputs.release_cleanup}}
           release_log_collector: ${{needs.pre-release.outputs.release_log_collector}}
           release_target_browser: ${{needs.pre-release.outputs.release_target_browser}}
 

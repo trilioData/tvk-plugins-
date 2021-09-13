@@ -1,0 +1,48 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: tvk-cleanup
+spec:
+  homepage: https://github.com/trilioData/tvk-plugins/blob/main/docs/cleanup/README.md
+  shortDescription: TVK cleanup cleans up TVK resources from k8s cluster
+  version: CLEANUP_VERSION
+  caveats: |
+    Curl and Git neeed to be installed on system for Krew index update to work properly
+  platforms:
+  - selector:
+      matchExpressions:
+      - key: os
+        operator: In
+        values:
+        - darwin
+        - linux
+    uri: https://github.com/trilioData/tvk-plugins/releases/download/CLEANUP_VERSION/cleanup.tar.gz
+    sha256: CLEANUP_TAR_CHECKSUM
+    bin: cleanup
+    files:
+    - from: cleanup/*
+      to: .
+
+  description: |
+    tvk-cleanup is a kubectl plugin which cleans up Triliovault for Kubernetes(TVK) application
+    Custom reources and CRDs in a Kubernetes cluster.
+
+    > Check available flags for cleanup plugin with :-
+    kubectl tvk-cleanup --help
+
+    -n, --noninteractive      run script in non-interactive mode
+    -c, --crd                 delete Triliovault CRDs
+    -t, --tvm                 delete Triliovault Manager or Operator
+    -r, --resources "resource1 resource2.."
+                              specify list of Triliovault CRs to delete
+                              If not provided, all Triliovault CRs (listed below) will be deleted
+                              e.g. Restore Backup Backupplan Hook Target Policy License
+
+    > Usage :-
+
+    kubectl tvk-cleanup -n -t -c -r  -- Cleans up all, Non-interactive
+    kubectl tvk-cleanup -t -c -r     -- Cleans up all, Interactive
+    kubectl tvk-cleanup -n -t        -- Cleans up only Triliovault Manager or Operator, Non-interactive
+    kubectl tvk-cleanup -n -c        -- Cleans up only Triliovault CRDs, Non-interactive
+    kubectl tvk-cleanup -n -r "Restore Backup Backupplan"
+                                     -- Cleans up only specified Triliovault CRs, Non-interactive
