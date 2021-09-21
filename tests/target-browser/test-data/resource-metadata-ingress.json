@@ -1,0 +1,70 @@
+{
+  "apiVersion": "networking.k8s.io/v1beta1",
+  "kind": "Ingress",
+  "metadata": {
+    "annotations": {
+      "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"networking.k8s.io/v1beta1\",\"kind\":\"Ingress\",\"metadata\":{\"annotations\":{\"nginx.ingress.kubernetes.io/rewrite-target\":\"/\"},\"labels\":{\"app\":\"frontend\",\"triliobackupall\":\"trilio\",\"triliobackupother\":\"other\"},\"name\":\"test-ingress\",\"namespace\":\"shubh\"},\"spec\":{\"rules\":[{\"http\":{\"paths\":[{\"backend\":{\"serviceName\":\"web\",\"servicePort\":80},\"path\":\"/\"}]}}]}}\n",
+      "nginx.ingress.kubernetes.io/rewrite-target": "/"
+    },
+    "creationTimestamp": "2021-09-04T09:54:12Z",
+    "generation": 1,
+    "labels": {
+      "app": "frontend",
+      "triliobackupall": "trilio",
+      "triliobackupother": "other"
+    },
+    "managedFields": [
+      {
+        "apiVersion": "networking.k8s.io/v1beta1",
+        "fieldsType": "FieldsV1",
+        "fieldsV1": {
+          "f:metadata": {
+            "f:annotations": {
+              ".": {},
+              "f:kubectl.kubernetes.io/last-applied-configuration": {},
+              "f:nginx.ingress.kubernetes.io/rewrite-target": {}
+            },
+            "f:labels": {
+              ".": {},
+              "f:app": {},
+              "f:triliobackupall": {},
+              "f:triliobackupother": {}
+            }
+          },
+          "f:spec": {
+            "f:rules": {}
+          }
+        },
+        "manager": "kubectl-client-side-apply",
+        "operation": "Update",
+        "time": "2021-09-04T09:54:12Z"
+      }
+    ],
+    "name": "test-ingress",
+    "namespace": "shubh",
+    "resourceVersion": "685106",
+    "selfLink": "/apis/networking.k8s.io/v1beta1/namespaces/shubh/ingresses/test-ingress",
+    "uid": "b7bd9108-adfa-4086-97a1-6e33b1ac438a"
+  },
+  "spec": {
+    "rules": [
+      {
+        "http": {
+          "paths": [
+            {
+              "backend": {
+                "serviceName": "web",
+                "servicePort": 80
+              },
+              "path": "/",
+              "pathType": "ImplementationSpecific"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "status": {
+    "loadBalancer": {}
+  }
+}

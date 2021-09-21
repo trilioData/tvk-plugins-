@@ -37,6 +37,7 @@ const (
 	cmdBackupPlan             = cmd.BackupPlanCmdName
 	cmdBackup                 = cmd.BackupCmdName
 	cmdMetadata               = cmd.MetadataCmdName
+	cmdResourceMetadata       = cmd.ResourceMetadataCmdName
 	cmdGet                    = "get"
 	flagPrefix                = "--"
 	hyphen                    = "-"
@@ -58,6 +59,10 @@ const (
 	flagExpirationStartTime   = flagPrefix + cmd.ExpirationStarTimeFlag
 	flagExpirationEndTime     = flagPrefix + cmd.ExpirationEndTimeFlag
 	flagOperationScope        = flagPrefix + cmd.OperationScopeFlag
+	flagKind                  = flagPrefix + cmd.KindFlag
+	flagName                  = flagPrefix + cmd.NameFlag
+	flagVersion               = flagPrefix + cmd.VersionFlag
+	flagGroup                 = flagPrefix + cmd.GroupFlag
 	kubeConf                  = ""
 	pageSize                  = 1
 	backupCreationStartDate   = "2021-05-16"
@@ -1569,6 +1574,181 @@ var _ = Describe("Target Browser Tests", func() {
 				defer jsonFile.Close()
 				expectedMetadata, _ := ioutil.ReadAll(jsonFile)
 				Expect(reflect.DeepEqual(expectedMetadata, metadata))
+			})
+		})
+	})
+
+	Context("Resource Metadata command test-cases", func() {
+		Context("Filter Operations on multiple flags & their fields", func() {
+			var (
+				once   sync.Once
+				isLast bool
+			)
+
+			BeforeEach(func() {
+				once.Do(func() {
+					createTarget(true)
+				})
+			})
+
+			AfterEach(func() {
+				if isLast {
+					deleteTarget(false)
+				}
+			})
+
+			It("Should fail if multiple flags are not given", func() {
+				args := []string{cmdGet, cmdResourceMetadata}
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("required flag(s) \"%s\", \"%s\", \"%s\", \"%s\" not set",
+					cmd.BackupPlanUIDFlag, cmd.BackupUIDFlag, cmd.KindFlag, cmd.VersionFlag)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s & %s not given", cmd.KindFlag, cmd.VersionFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagBackupUIDFlag, "", flagBackupPlanUIDFlag, ""}
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("required flag(s) \"%s\", \"%s\" not set",
+					cmd.KindFlag, cmd.VersionFlag)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s & %s not given", cmd.BackupPlanUIDFlag, cmd.BackupUIDFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagKind, "", flagVersion, ""}
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("required flag(s) \"%s\", \"%s\" not set",
+					cmd.BackupPlanUIDFlag, cmd.BackupUIDFlag)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s is given without value", cmd.BackupUIDFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagKind, "", flagVersion, "", flagBackupPlanUIDFlag, ""}
+				args = append(args, commonArgs...)
+				args = append(args, flagBackupUIDFlag)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagBackupUIDFlag)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s is given without value", cmd.BackupPlanUIDFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagKind, "", flagVersion, "", flagBackupUIDFlag, ""}
+				args = append(args, commonArgs...)
+				args = append(args, flagBackupPlanUIDFlag)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagBackupPlanUIDFlag)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s is given without value", cmd.KindFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagVersion, "", flagBackupUIDFlag, "", flagBackupPlanUIDFlag, ""}
+				args = append(args, commonArgs...)
+				args = append(args, flagKind)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagKind)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s is given without value", cmd.VersionFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagKind, "", flagBackupUIDFlag, "", flagBackupPlanUIDFlag, ""}
+				args = append(args, commonArgs...)
+				args = append(args, flagVersion)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagVersion)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s is given without value", cmd.NameFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagKind, "", flagVersion, "", flagBackupUIDFlag, "", flagBackupPlanUIDFlag, ""}
+				args = append(args, commonArgs...)
+				args = append(args, flagName)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagName)))
+			})
+
+			It(fmt.Sprintf("Should fail if flag %s is given without value", cmd.GroupFlag), func() {
+				args := []string{cmdGet, cmdResourceMetadata, flagKind, "", flagVersion, "", flagBackupUIDFlag, "", flagBackupPlanUIDFlag, ""}
+				args = append(args, commonArgs...)
+				args = append(args, flagGroup)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagGroup)))
+			})
+
+			It("Should fail if flags are given wrong values", func() {
+				isLast = true
+				args := []string{cmdGet, cmdResourceMetadata, flagGroup, "app", flagKind, "Deplo", flagVersion, "v",
+					flagName, "mysq", flagBackupUIDFlag, "random", flagBackupPlanUIDFlag, "random"}
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("did not successfully completed - 404 Not Found"))
+			})
+		})
+		Context("Filter Operations on absolute values for flags used", func() {
+			var (
+				backupPlanUIDs                   []string
+				noOfBackupPlansToCreate          = 1
+				noOfBackupsToCreatePerBackupPlan = 1
+				once                             sync.Once
+				isLast                           bool
+				backupUID                        string
+			)
+
+			BeforeEach(func() {
+				once.Do(func() {
+					backupUID = guid.New().String()
+					createTarget(true)
+					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
+						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID, "custom", "ingress").Output()
+
+					log.Info("Shell Script Output: ", string(output))
+					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
+					time.Sleep(time.Second * 30) //wait to sync data on target browser
+				})
+			})
+
+			AfterEach(func() {
+				if isLast {
+					// delete target & remove all files & directories created for this Context - only once After all It in this context
+					deleteTarget(false)
+					for _, backupPlans := range backupPlanUIDs {
+						_, err := shell.RmRf(filepath.Join(TargetLocation, backupPlans))
+						Expect(err).To(BeNil())
+					}
+				}
+			})
+
+			It("Should filter resource metadata on specific values of flags", func() {
+				isLast = true
+				args := []string{cmdGet, cmdResourceMetadata, flagGroup, "networking.k8s.io", flagKind, "Ingress", flagVersion, "v1beta1",
+					flagName, "test-ingress", flagBackupUIDFlag, backupUID, flagBackupPlanUIDFlag, backupPlanUIDs[0]}
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				log.Info(command)
+				output, err := command.CombinedOutput()
+				Expect(err).ShouldNot(HaveOccurred())
+				log.Infof("Resource Metadata is %s", output)
+				re := regexp.MustCompile("(?m)[\r\n]+^.*location.*$")
+				resourceMetadata := re.ReplaceAllString(string(output), "")
+				jsonFile, err := os.Open(filepath.Join(testDataDirRelPath, "resource-metadata-ingress.json"))
+				Expect(err).To(BeNil())
+				defer jsonFile.Close()
+				expectedResourceMetadata, _ := ioutil.ReadAll(jsonFile)
+				Expect(reflect.DeepEqual(expectedResourceMetadata, resourceMetadata))
 			})
 		})
 	})

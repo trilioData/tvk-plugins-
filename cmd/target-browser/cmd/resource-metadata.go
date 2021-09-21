@@ -24,7 +24,9 @@ func resourceMetadataCmd() *cobra.Command {
 		RunE: getResourceMetadata,
 	}
 
-	cmd.Flags().StringVarP(&group, groupFlag, groupFlagShort, groupDefault, groupUsage)
+	cmd.Flags().StringVarP(&group, GroupFlag, GroupFlagShort, groupDefault, groupUsage)
+
+	cmd.Flags().StringVar(&name, NameFlag, nameDefault, nameUsage)
 
 	cmd.Flags().StringVar(&backupPlanUID, BackupPlanUIDFlag, backupPlanUIDDefault, backupPlanUIDUsage)
 	err := cmd.MarkFlagRequired(BackupPlanUIDFlag)
@@ -38,22 +40,16 @@ func resourceMetadataCmd() *cobra.Command {
 		log.Fatalf("Invalid option or missing required flag %s - %s", BackupUIDFlag, err.Error())
 	}
 
-	cmd.Flags().StringVarP(&version, versionFlag, versionFlagShort, versionDefault, versionUsage)
-	err = cmd.MarkFlagRequired(versionFlag)
+	cmd.Flags().StringVarP(&version, VersionFlag, VersionFlagShort, versionDefault, versionUsage)
+	err = cmd.MarkFlagRequired(VersionFlag)
 	if err != nil {
-		log.Fatalf("Invalid option or missing required flag %s - %s", versionFlag, err.Error())
+		log.Fatalf("Invalid option or missing required flag %s - %s", VersionFlag, err.Error())
 	}
 
-	cmd.Flags().StringVarP(&kind, kindFlag, kindFlagShort, kindDefault, kindUsage)
-	err = cmd.MarkFlagRequired(kindFlag)
+	cmd.Flags().StringVarP(&kind, KindFlag, KindFlagShort, kindDefault, kindUsage)
+	err = cmd.MarkFlagRequired(KindFlag)
 	if err != nil {
-		log.Fatalf("Invalid option or missing required flag %s - %s", kindFlag, err.Error())
-	}
-
-	cmd.Flags().StringVar(&name, nameFlag, nameDefault, nameUsage)
-	err = cmd.MarkFlagRequired(nameFlag)
-	if err != nil {
-		log.Fatalf("Invalid option or missing required flag %s - %s", nameFlag, err.Error())
+		log.Fatalf("Invalid option or missing required flag %s - %s", KindFlag, err.Error())
 	}
 
 	return cmd

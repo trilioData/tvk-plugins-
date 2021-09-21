@@ -70,22 +70,22 @@ const (
 	operationScopeUsage = "Filter backup/backupPlan for [SingleNamespace, MultiNamespace]. " +
 		"Supported values can be in any case capital, small or mixed."
 
-	groupFlag      = "group"
-	groupFlagShort = "g"
+	GroupFlag      = "group"
+	GroupFlagShort = "g"
 	groupDefault   = ""
 	groupUsage     = "API group name of resource whose resource-metadata needs to be retrieved"
 
-	versionFlag      = "version"
-	versionFlagShort = "v"
+	VersionFlag      = "version"
+	VersionFlagShort = "v"
 	versionDefault   = ""
 	versionUsage     = "API version of resource whose resource-metadata needs to be retrieved"
 
-	kindFlag      = "kind"
-	kindFlagShort = "k"
+	KindFlag      = "kind"
+	KindFlagShort = "k"
 	kindDefault   = ""
 	kindUsage     = "API resource Kind of backed up resource whose resource-metadata needs to be retrieved"
 
-	nameFlag    = "name"
+	NameFlag    = "name"
 	nameDefault = ""
 	nameUsage   = "name of backed up resource whose resource-metadata needs to be retrieved"
 
