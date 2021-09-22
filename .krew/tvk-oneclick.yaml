@@ -1,0 +1,42 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: tvk-oneclick
+spec:
+  homepage: https://github.com/trilioData/tvk-plugins/blob/main/docs/tvk-oneclick/README.md
+  shortDescription: Plugin to Install/Configure/Test TVK
+  version: TVK_ONECLICK_VERSION
+  caveats: |
+    Curl and Git neeed to be installed on system for Krew index update to work properly
+  platforms:
+  - selector:
+      matchExpressions:
+      - key: os
+        operator: In
+        values:
+        - darwin
+        - linux
+    uri: https://github.com/trilioData/tvk-plugins/releases/download/v1.0.0-rc5/tvk-oneclick.tar.gz
+    sha256: TVK_ONECLICK_TAR_CHECKSUM
+    bin: tvk-oneclick
+    files:
+    - from: tvk-oneclick/*
+      to: .
+
+  description: |
+    tvk-oneclick plugin is use to install, configure and test available sample application on a kubermetes cluster managed by cloud or upstream
+    > Check available flags for tvk-oneclick plugin with :-
+    kubectl tvk-oneclick --help
+    --------------------------------------------------------------
+    tvk-oneclick - Installs, Configures UI, Create sample backup/restore test
+    Usage:
+    kubectl tvk-oneclick [options]
+    Options:
+        -h, --help                show brief help
+        -n, --noninteractive      run script in non-interactive mode
+        -i, --install_tvk         Installs TVK and it's free trial license.
+        -c, --configure_ui        Configures TVK UI
+        -t, --target              Created Target for backup and restore jobs
+        -s, --sample_test         Create sample backup and restore jobs
+        -p, --preflight           Checks if all the pre-requisites are satisfied
+    -----------------------------------------------------------------------

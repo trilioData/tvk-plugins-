@@ -1,0 +1,35 @@
+PREFLIGHT=False  			#Whether or not preflight should be executed [True, False]
+proceed_even_PREFLIGHT_fail='Y' 	#Allowedvalues=[Y,y,n,N]
+TVK_INSTALL=True 			#Whether or not TVK should be installed [True, False]
+CONFIGURE_UI=True 			#Whether or not TVK UI should be configured [True, False]
+TARGET=True 				#Whether or not TVK Target should be created [True, False]
+SAMPLE_TEST=True 			#Whether or not sample test should be executed [True, False]
+storage_class=   			#Specify storage class name to be used for pvc to be created
+operator_version= 			#Specify TVK operator version
+triliovault_manager_version='v2.1.1-alpha' #Specify TVK Manager version
+if_resource_exists_still_proceed=True   #Specify if plugin should proceed even if resource exists
+ui_access_type='Nodeport' 	#Specify the way in which TVK UI should be configured['Loadbalancer','Nodeport','PortForwarding']
+domain='domain_name'    	#Specify the domain name, this should be present or added in DNS server
+tvkhost_name='tvkdemo'	      	#Specify TVK host name
+cluster_name='trilio-test2'   	#Specify cluster name
+target_type='NFS'		#Specify Target type ['NFS','DOKs_S3']
+access_key='access_key'   	#Specify access_key
+secret_key='secret_key' 	#Specify secret key
+host_base='nyc3.digitaloceanspaces.com'		#Specify host_base for s3cmd command
+host_bucket='%(bucket)s.nyc3.digitaloceanspaces.com'	#Specify host_bucket for s3cmd command
+gpg_passphrase='trilio'		#Specify  gpg_passphrase
+bucket_name='tvk-backup-bucket'	#Specify  bucket/space name
+target_name='tvk-target'	#Specify Target name
+target_namespace='default'	#Specify Namepsace name where the target should be created
+nfs_server=''			#Specify NS server name/address
+nfs_path=''			#Specify exported path
+nfs_options='nfsvers=4'		#Specif more NFS option to be provided like: 'nfsvers=4'
+thresholdCapacity='1000Gi'	#Specify thresholdcapacity for target
+bk_plan_name='trilio-test-backup'	#Specify backup plan name
+bk_plan_namespae='trilio-test-backup'	#Specify backupplan name space
+backup_name='trilio-test-backup'	#Specify backup name
+backup_namespace='trilio-test-backup'	#Specify backup namespace[Note: currently backupplan and backup should be in same namespace]
+backup_way='Label_based'		#Specify the way in which backup should be taken ['Label_based','Namespace_based','Operator_based','Helm_based']
+restore=True	#Whether or not restore should be Performed [True, False]
+restore_name='tvk-restore' #Specify TVK restore name
+restore_namespace='tvk-restore' #Specify Restore namespace

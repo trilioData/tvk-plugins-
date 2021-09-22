@@ -16,6 +16,7 @@ on:
       - 'hack/update-preflight-manifest.sh'
       - 'hack/update-log-collector-manifest.sh'
       - 'hack/update-target-browser-manifest.sh'
+      - 'hack/update-tvk-oneclick-manifests.sh'
       - '.github/workflows/plugin-manifests.yml'
 
 env:
@@ -33,6 +34,8 @@ jobs:
       logCollector: ${{ steps.filter.outputs.logCollector }}
       targetBrowser: ${{ steps.filter.outputs.targetBrowser }}
       testTargetBrowser: ${{ steps.filter.outputs.testTargetBrowser }}
+      oneclick: ${{ steps.filter.outputs.oneclick }}
+      testoneclick: ${{ steps.filter.outputs.testoneclick }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -94,6 +97,15 @@ jobs:
               - '.krew/tvk-target-browser.yaml'
             testTargetBrowser:
               - *sharedTargetBrowser
+            sharedOneclick: &sharedOneclick
+              - *shared
+              - 'tools/tvk-oneclick/**'
+              - 'tests/tvk-oneclick/**'
+            oneclick:
+              - *sharedOneclick
+              - '.krew/tvk-oneclick.yaml'
+            testoneclick:
+              - *sharedOneclick
 
   # build_test_preflight job build preflight packages, runs integration tests and tests packages for plugin creation(install, uninstall)
   # upload preflight packages to github artifacts if tags('/ref/tags') are pushed
@@ -256,17 +268,83 @@ jobs:
       - name: Test Target-Browser Plugin Locally
         run: make test-target-browser-plugin-locally
 
+  # build_test_tvk_oneclick job build tvk-oneclick packages, runs integration tests and tests packages for plugin creation(install, uninstall)
+  # upload tvkoneclick packages to github artifacts if tags('/ref/tags') are pushed
+  build_test_tvk_oneclick:
+    runs-on: ubuntu-latest
+    needs: pre-build
+    # for tags('ref/tags/'), 'needs.pre-build.outputs.oneclick' will be 'false' so to run 'build_test_preflight' job on tags as well,
+    # added condition 'startsWith(github.ref, 'refs/tags/')'
+    if: (needs.pre-build.outputs.oneclick == 'true') || startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build Tvk-oneclick Package
+        run: make build-tvk-oneclick
+
+      - name: Set up Cloud SDK
+        if: (needs.pre-build.outputs.testoneclick == 'true') || startsWith(github.ref, 'refs/tags/')
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCS_PROJECT_ID }}
+          service_account_key: ${{ secrets.GKE_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Authenticate and Connect to GKE cluster
+        if: (needs.pre-build.outputs.testoneclick == 'true') || startsWith(github.ref, 'refs/tags/')
+        uses: google-github-actions/get-gke-credentials@main
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          use_auth_provider: true
+          credentials: ${{ secrets.GKE_SA_KEY }}
+
+      - name: Create Virtual cluster
+        run: |
+          tests/tvk-oneclick/create_virtual_cluster.sh tvk-oneclick-${{ github.run_id }} "default"
+
+      - name: Update 'input_config'
+        run: |
+          echo "Updating 'tests/tvk-oneclick/input_config to run tvk-oneclick"
+          sed -i "s/^\(nfs_path\s*=\s*\).*$/\1\'\/src\/nfs\/kubedata\'/" tests/tvk-oneclick/input_config
+          nfs_server=${{ secrets.NFS_SERVER_IP }}
+          sed -i "s/^\(nfs_server\s*=\s*\).*$/\1\'$nfs_server\'/" tests/tvk-oneclick/input_config
+
+      - name: Run Tvk-oneclick Integration Tests
+        if: (needs.pre-build.outputs.testoneclick == 'true') || startsWith(github.ref, 'refs/tags/')
+        run: make test-tvk_oneclick-integration
+        env:
+          nfs_server_ip: ${{ secrets.NFS_SERVER_IP }}
+          build_id: tvk-oneclick-${{ github.run_id }}
+
+      - name: Ensure Required Utilities Installed
+        run: make install-required-utilities
+
+      - name: Test tvk_oneclick Plugin Locally
+        run: make test-tvk-oneclick-plugin-locally
+
+      - name: Upload  Tvk-oneclick Plugin Packges to github artifact
+        uses: actions/upload-artifact@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: tvk-oneclick
+          path: |
+            build/tvk-oneclick.tar.gz
+            build/tvk-oneclick-sha256.txt
+
   # pre-release job determines whether to create release or not and sets job variables which will be used to decide
   # what packages(preflight, log-collector, target-browser) should be included in release
   pre-release:
     runs-on: ubuntu-latest
-    needs: [build_test_preflight, build_test_log-collector, build_test_target-browser]
+    needs: [build_test_preflight, build_test_log-collector, build_test_target-browser, build_test_tvk_oneclick]
     if: startsWith(github.ref, 'refs/tags/')
     outputs:
       create_release: ${{ steps.detect_changes.outputs.create_release }}
       release_preflight: ${{ steps.detect_changes.outputs.release_preflight }}
       release_log_collector: ${{ steps.detect_changes.outputs.release_log_collector }}
       release_target_browser: ${{ steps.detect_changes.outputs.release_target_browser }}
+      release_tvk_oneclick: ${{ steps.detect_changes.outputs.release_tvk_oneclick }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -293,9 +371,17 @@ jobs:
           name: preflight
           path: build
 
+      - name: Download Tvk-oneclick Packages from Artifact
+        uses: actions/download-artifact@v2
+        if: needs.pre-release.outputs.release_tvk_oneclick == 'true'
+        with:
+          name: tvk-oneclick
+          path: build
+
       - name: Update GoReleaser Config for Release
         run: hack/update-goreleaser-yaml.sh
         env:
+          release_tvk-oneclick: ${{needs.pre-release.outputs.release_tvk_oneclick }}
           release_preflight: ${{needs.pre-release.outputs.release_preflight}}
           release_log_collector: ${{needs.pre-release.outputs.release_log_collector}}
           release_target_browser: ${{needs.pre-release.outputs.release_target_browser}}

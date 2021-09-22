@@ -36,6 +36,9 @@ install: install-required-utilities
 build-preflight:
 	./hack/build-preflight-artifacts.sh
 
+build-tvk-oneclick:
+	./hack/build-tvk-oneclick-artifacts.sh
+
 build-log-collector:
 	find . -name .goreleaser.yml -exec sed -i '/binary: target-browser/a \ \ skip: true' {} +
 	goreleaser release --snapshot --skip-publish --rm-dist
@@ -46,7 +49,7 @@ build-target-browser:
 	goreleaser release --snapshot --skip-publish --rm-dist
 	find . -name .goreleaser.yml -exec sed -i '/skip: true/d' {} +
 
-build: build-preflight
+build: build-preflight build-tvk-oneclick
 	goreleaser release --snapshot --skip-publish --rm-dist
 
 test-preflight-plugin-locally:
@@ -61,19 +64,28 @@ test-target-browser-plugin-locally:
 	./hack/generate-test-target-browser-plugin-manifest.sh
 	./hack/test-target-browser-plugin-locally.sh
 
+test-tvk-oneclick-plugin-locally:
+	./hack/generate-test-tvk-oneclick-plugin-manifest.sh
+	./hack/test-tvk-oneclick-plugin-locally.sh
+
 test-preflight-integration:
 	./tests/preflight/preflight_test.sh
+
+test-tvk_oneclick-integration:
+	./tests/tvk-oneclick/tvk_oneclick_test.sh
 
 test-target-browser-integration:
 	./hack/run-integration-tests.sh tests/target-browser/...
 
-test: test-preflight-integration test-target-browser-integration
+test: test-preflight-integration test-target-browser-integration test-tvk_oneclick-integration 
 
-test-preflight: clean build-preflight test-preflight-plugin-locally
+test-preflight: clean build-preflight test-preflight-plugin-locally 
 
 test-log-collector: clean build-log-collector test-log-collector-plugin-locally
 
 test-target-browser: clean build-target-browser test-target-browser-integration test-target-browser-plugin-locally
+
+test-tvk-oneclick: clean build-tvk-oneclick test-tvk_oneclick-integration test-tvk-oneclick-plugin-locally
 
 test-plugins-locally: test-preflight-plugin-locally test-log-collector-plugin-locally test-target-browser-plugin-locally
 
@@ -93,6 +105,9 @@ update-log-collector-manifest:
 
 update-target-browser-manifest:
 	./hack/update-target-browser-manifest.sh
+
+update-tvk-oneclick-manifests:
+	./hack/update-tvk-oneclick-manifests.sh
 
 update-plugin-manifests: update-preflight-manifest update-log-collector-manifest update-target-browser-manifest
 

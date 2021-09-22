@@ -1,0 +1,6 @@
+rbac:
+  clusterRole:
+    create: true
+
+syncer:
+  extraArgs: ["--enable-storage-classes", "--sync-all-nodes", "--fake-nodes=false", "--fake-kubelets=false", "--fake-persistent-volumes=false"]
