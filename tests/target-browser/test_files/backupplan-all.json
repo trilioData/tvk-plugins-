@@ -1,25 +1,28 @@
 {
+  "kind": "BackupPlan",
+  "apiVersion": "triliovault.trilio.io/v1",
   "metadata": {
     "name": "sample-backupplan",
-    "namespace": "temp-ns",
-    "selfLink": "/apis/triliovault.trilio.io/v1/namespaces/temp-ns/backupplans/sample-backupplan",
+    "namespace": "test-ns",
+    "selfLink": "/apis/triliovault.trilio.io/v1/namespaces/test-ns/backupplans/sample-backupplan",
     "uid": "BACKUPPLAN-UUID",
-    "resourceVersion": "164463887",
+    "resourceVersion": "83490771",
     "generation": 1,
-    "creationTimestamp": "2021-05-18T17:38:16Z",
+    "creationTimestamp": "2021-09-21T06:54:54Z",
     "annotations": {
-      "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"triliovault.trilio.io/v1\",\"kind\":\"BackupPlan\",\"metadata\":{\"annotations\":{},\"name\":\"sample-backupplan\",\"namespace\":\"temp-ns\"},\"spec\":{\"backupConfig\":{\"target\":{\"name\":\"sample-target\"}},\"backupPlanComponents\":{\"helmReleases\":[\"mysql\"]}}}\n"
+      "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"triliovault.trilio.io/v1\",\"kind\":\"BackupPlan\",\"metadata\":{\"annotations\":{},\"name\":\"sample-backupplan\",\"namespace\":\"test-ns\"},\"spec\":{\"backupConfig\":{\"target\":{\"name\":\"sample-target\"}},\"backupNamespace\":\"test-ns\",\"backupPlanComponents\":{\"custom\":[{\"matchLabels\":{\"app\":\"k8s-demo-app\"}}],\"helmReleases\":[\"cockroachdb-app\"],\"operators\":[{\"applicationResourceSelector\":[{\"matchLabels\":{\"app\":\"etcd\"}}],\"customResources\":[{\"groupVersionKind\":{\"group\":\"etcd.database.coreos.com\",\"kind\":\"EtcdCluster\",\"version\":\"v1beta2\"},\"objects\":[\"demo-etcd-cluster\"]}],\"operatorId\":\"demo-etcd-cluster\",\"operatorResourceSelector\":[{\"matchLabels\":{\"release\":\"demo-etcd-operator\"}}]}]}}}\n"
     }
   },
   "spec": {
+    "backupNamespace": "test-ns",
     "backupConfig": {
       "target": {
         "kind": "Target",
-        "namespace": "temp-ns",
+        "namespace": "test-ns",
         "name": "sample-target",
-        "uid": "018311c7-d7ab-4dc2-b903-cc00932271f6",
+        "uid": "54143650-f80a-4e1c-a206-9ecc8d3bcaf7",
         "apiVersion": "triliovault.trilio.io/v1",
-        "resourceVersion": "164460692"
+        "resourceVersion": "83487241"
       },
       "schedulePolicy": {
         "incrementalCron": {
@@ -31,46 +34,86 @@
       }
     },
     "backupPlanComponents": {
-      "custom": [
-        {
-          "matchLabels": {
-            "app": "nginx"
-          }
-        }
-      ],
       "helmReleases": [
-        "mysql"
+        "cockroachdb-app"
       ],
-      "operators": [
-        {
-          "operatorId": "abc"
+      "operators": [{
+        "operatorId": "demo-etcd-cluster",
+        "customResources": [{
+          "groupVersionKind": {
+            "group": "etcd.database.coreos.com",
+            "version": "v1beta2",
+            "kind": "EtcdCluster"
+          },
+          "objects": [
+            "demo-etcd-cluster"
+          ]
+        }],
+        "operatorResourceSelector": [{
+          "matchLabels": {
+            "release": "demo-etcd-operator"
+          }
+        }],
+        "operatorResources": {
+          "labelSelector": [{
+            "matchLabels": {
+              "release": "demo-etcd-operator"
+            }
+          }]
+        },
+        "applicationResourceSelector": [{
+          "matchLabels": {
+            "app": "etcd"
+          }
+        }],
+        "applicationResources": {
+          "labelSelector": [{
+            "matchLabels": {
+              "app": "etcd"
+            }
+          }]
         }
-      ]
+      }],
+      "custom": [{
+        "matchLabels": {
+          "app": "k8s-demo-app"
+        }
+      }],
+      "customSelector": {
+        "selectResources": {
+          "labelSelector": [{
+            "matchLabels": {
+              "app": "k8s-demo-app"
+            }
+          }]
+        }
+      }
     }
   },
   "status": {
     "status": "Available",
     "scope": "App",
-    "applicationType": "custom",
+    "applicationType": "Custom",
     "stats": {
       "backupSummary": {
         "inProgressBackup": {
           "kind": "Backup",
-          "namespace": "temp-ns",
+          "namespace": "test-ns",
           "name": "sample-backup",
-          "uid": "BACKUP-UUID",
+          "uid": "a20a9465-8a86-4d05-8c73-20dab965b928",
           "apiVersion": "triliovault.trilio.io/v1",
-          "resourceVersion": "164463883"
+          "resourceVersion": "83490768"
         },
         "latestBackup": {
           "kind": "Backup",
-          "namespace": "temp-ns",
+          "namespace": "test-ns",
           "name": "sample-backup",
           "uid": "BACKUP-UUID",
           "apiVersion": "triliovault.trilio.io/v1",
-          "resourceVersion": "164463883"
+          "resourceVersion": "83490768"
         },
-        "totalInProgressBackups": 1
+        "totalInProgressBackups": 1,
+        "pvcExistsForBackup": false
       },
       "restoreSummary": {}
     }

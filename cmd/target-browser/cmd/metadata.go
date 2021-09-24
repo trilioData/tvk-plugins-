@@ -24,12 +24,8 @@ func metadataCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&backupPlanUID, BackupPlanUIDFlag, backupPlanUIDDefault, backupPlanUIDUsage)
-	err := cmd.MarkFlagRequired(BackupPlanUIDFlag)
-	if err != nil {
-		log.Fatalf("Invalid option or missing required flag %s - %s", BackupPlanUIDFlag, err.Error())
-	}
 	cmd.Flags().StringVar(&backupUID, BackupUIDFlag, backupUIDDefault, backupUIDUsage)
-	err = cmd.MarkFlagRequired(BackupUIDFlag)
+	err := cmd.MarkFlagRequired(BackupUIDFlag)
 	if err != nil {
 		log.Fatalf("Invalid option or missing required flag %s - %s", BackupUIDFlag, err.Error())
 	}
@@ -43,10 +39,5 @@ func getMetadata(*cobra.Command, []string) error {
 		OutputFormat:  outputFormat,
 	}
 
-	err := targetBrowserAuthConfig.GetMetadata(&mdOptions)
-	if err != nil {
-		return err
-	}
-	return nil
-
+	return targetBrowserAuthConfig.GetMetadata(&mdOptions)
 }

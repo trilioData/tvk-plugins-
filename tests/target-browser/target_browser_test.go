@@ -64,6 +64,7 @@ const (
 	backupCreationEndDate     = "2021-05-18"
 	backupExpirationStartDate = "2021-09-13"
 	backupExpirationEndDate   = "2021-09-14"
+	startTime                 = "00:00:00"
 )
 
 var (
@@ -295,11 +296,9 @@ var _ = Describe("Target Browser Tests", func() {
 				once.Do(func() {
 					backupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
-					time.Sleep(2 * time.Minute) // wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate)
 				})
 			})
 
@@ -400,11 +399,9 @@ var _ = Describe("Target Browser Tests", func() {
 				once.Do(func() {
 					backupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
-					time.Sleep(2 * time.Minute) //wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate)
 				})
 			})
 
@@ -440,13 +437,14 @@ var _ = Describe("Target Browser Tests", func() {
 				_, err := cmd.CombinedOutput()
 				Expect(err).ShouldNot(HaveOccurred())
 			})
-			// TODO update condition once API is fixed
-			It(fmt.Sprintf("Should succeed if flag %s is given 'invalid' value", flagOrderBy), func() {
+
+			It(fmt.Sprintf("Should fail if flag %s is given 'invalid' value", flagOrderBy), func() {
 				args := []string{cmdGet, cmdBackupPlan, flagOrderBy, "invalid"}
 				args = append(args, commonArgs...)
 				cmd := exec.Command(targetBrowserBinaryFilePath, args...)
-				_, err := cmd.CombinedOutput()
-				Expect(err).ShouldNot(HaveOccurred())
+				output, err := cmd.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("400 Bad Request"))
 			})
 
 			It(fmt.Sprintf("Should get one page backupPlan using flag %s", cmd.PageSizeFlag), func() {
@@ -461,7 +459,6 @@ var _ = Describe("Target Browser Tests", func() {
 				Expect(len(backupPlanData)).To(Equal(cmd.PageSizeDefault))
 			})
 
-			// TODO update condition once API is fixed
 			It(fmt.Sprintf("Should get one page backupPlan if flag %s is given zero value", cmd.PageSizeFlag), func() {
 				args := []string{cmdGet, cmdBackupPlan, flagPageSize, "0"}
 				backupPlanData := runCmdBackupPlan(args)
@@ -476,12 +473,13 @@ var _ = Describe("Target Browser Tests", func() {
 				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf(" invalid argument \"invalid\" for \"%s\"", flagPageSize)))
 			})
 
-			// TODO update condition once API is fixed
-			It(fmt.Sprintf("Should succeed if flag %s is given negative value", cmd.PageSizeFlag), func() {
+			It(fmt.Sprintf("Should fail if flag %s is given negative value", cmd.PageSizeFlag), func() {
 				args := []string{cmdGet, cmdBackupPlan, flagPageSize, "-1"}
+				args = append(args, commonArgs...)
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
-				_, err := command.CombinedOutput()
+				output, err := command.CombinedOutput()
 				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("400 Bad Request"))
 			})
 
 			It("Should get one backupPlan for specific backupPlan UID", func() {
@@ -537,7 +535,7 @@ var _ = Describe("Target Browser Tests", func() {
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given valid format timestamp value", flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%sT%sZ", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%sT%sZ", backupCreationEndDate, startTime)}
 				backupPlanData := runCmdBackupPlan(args)
 				Expect(len(backupPlanData)).To(Equal(cmd.PageSizeDefault))
 			})
@@ -549,20 +547,20 @@ var _ = Describe("Target Browser Tests", func() {
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given invalid format timestamp without 'T' value", flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%sT%s", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%sT%s", backupCreationEndDate, startTime)}
 				backupPlanData := runCmdBackupPlan(args)
 				Expect(len(backupPlanData)).To(Equal(cmd.PageSizeDefault))
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given invalid format timestamp without 'Z' value", flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%s %sZ", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%s %sZ", backupCreationEndDate, startTime)}
 				backupPlanData := runCmdBackupPlan(args)
 				Expect(len(backupPlanData)).To(Equal(cmd.PageSizeDefault))
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given invalid format timestamp without 'T' & 'Z' value",
 				flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%s %s", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackupPlan, flagCreationStartTime, fmt.Sprintf("%s %s", backupCreationEndDate, startTime)}
 				backupPlanData := runCmdBackupPlan(args)
 				Expect(len(backupPlanData)).To(Equal(cmd.PageSizeDefault))
 			})
@@ -637,20 +635,14 @@ var _ = Describe("Target Browser Tests", func() {
 					backupUID = guid.New().String()
 					clusterBackupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfClusterBackupPlansToCreate),
-						strconv.Itoa(noOfClusterBackupsToCreatePerClusterBackupPlan), "cluster_backup", clusterBackupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfClusterBackupPlansToCreate, noOfClusterBackupsToCreatePerClusterBackupPlan, clusterBackupUID, "cluster_backup")
 					clusterBackupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfClusterBackupPlansToCreate,
 						noOfClusterBackupPlansToCreate*noOfClusterBackupsToCreatePerClusterBackupPlan)
-
-					output, _ = exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
-
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate+noOfClusterBackupPlansToCreate,
 						noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan+
 							noOfClusterBackupsToCreatePerClusterBackupPlan*noOfClusterBackupPlansToCreate)
-					time.Sleep(2 * time.Minute) //wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate + noOfClusterBackupPlansToCreate)
 					clusterBackupPlanUIDSet = sets.NewString(clusterBackupPlanUIDs...)
 					backupPlanUIDSet = sets.NewString(backupPlanUIDs...).Difference(clusterBackupPlanUIDSet)
 				})
@@ -714,7 +706,6 @@ var _ = Describe("Target Browser Tests", func() {
 		})
 
 		Context("Filtering BackupPlans based on TVK Instance ID", func() {
-
 			var (
 				backupPlanUIDs      []string
 				tvkInstanceIDValues []string
@@ -730,11 +721,10 @@ var _ = Describe("Target Browser Tests", func() {
 						guid.New().String(),
 					}
 					for _, value := range tvkInstanceIDValues {
-						_, err := exec.Command(createBackupScript, "1", "1", "mutate-tvk-id", value).Output()
-						Expect(err).To(BeNil())
+						createBackups(1, 1, value, "mutate-tvk-id")
 					}
-					time.Sleep(2 * time.Minute) // wait to sync data on target browser
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(2, 2)
+					verifyBrowserCacheBPlan(2)
 				})
 			})
 			AfterEach(func() {
@@ -752,7 +742,7 @@ var _ = Describe("Target Browser Tests", func() {
 					Expect(backupPlanData[0].TvkInstanceID).Should(Equal(value))
 				}
 			})
-			// TODO update condition once API is fixed
+
 			It(fmt.Sprintf("Should get zero backupPlans using flag %s with 'invalid' value", cmd.TvkInstanceUIDFlag), func() {
 				args := []string{cmdGet, cmdBackupPlan, flagTvkInstanceUIDFlag, "invalid"}
 				backupPlanData := runCmdBackupPlan(args)
@@ -798,11 +788,9 @@ var _ = Describe("Target Browser Tests", func() {
 				once.Do(func() {
 					backupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
-					time.Sleep(2 * time.Minute) //wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate)
 				})
 			})
 
@@ -873,11 +861,9 @@ var _ = Describe("Target Browser Tests", func() {
 				once.Do(func() {
 					backupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
-					time.Sleep(2 * time.Minute) // wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate)
 				})
 			})
 
@@ -897,11 +883,14 @@ var _ = Describe("Target Browser Tests", func() {
 				Expect(err).Should(HaveOccurred())
 				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagBackupStatus)))
 			})
-			// TODO update condition once API is fixed
-			It(fmt.Sprintf("Should succeed if flag %s is given 'invalid' value", cmd.BackupStatusFlag), func() {
+
+			It(fmt.Sprintf("Should fail if flag %s is given 'invalid' value", cmd.BackupStatusFlag), func() {
 				args := []string{cmdGet, cmdBackup, flagBackupStatus, "invalid"}
-				backupData := runCmdBackup(args)
-				Expect(len(backupData)).To(Equal(0))
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("400 Bad Request"))
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given zero value", cmd.BackupStatusFlag), func() {
@@ -949,19 +938,21 @@ var _ = Describe("Target Browser Tests", func() {
 				backupPlanData := runCmdBackupPlan(args)
 				Expect(len(backupPlanData)).To(Equal(cmd.PageSizeDefault))
 			})
-			// TODO update condition once API is fixed
+
 			It(fmt.Sprintf("Should succeed if flag %s is given zero value", cmd.PageSizeFlag), func() {
 				args := []string{cmdGet, cmdBackup, flagPageSize, "0"}
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
 				_, err := command.CombinedOutput()
 				Expect(err).Should(HaveOccurred())
 			})
-			// TODO update condition once API is fixed
-			It(fmt.Sprintf("Should succeed if flag %s is given negative value", cmd.PageSizeFlag), func() {
+
+			It(fmt.Sprintf("Should fail if flag %s is given negative value", cmd.PageSizeFlag), func() {
 				args := []string{cmdGet, cmdBackup, flagPageSize, "-1"}
+				args = append(args, commonArgs...)
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
-				_, err := command.CombinedOutput()
+				output, err := command.CombinedOutput()
 				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("400 Bad Request"))
 			})
 
 			It(fmt.Sprintf("Should fail if flag %s is given 'invalid' value", cmd.PageSizeFlag), func() {
@@ -995,13 +986,14 @@ var _ = Describe("Target Browser Tests", func() {
 				_, err := cmd.CombinedOutput()
 				Expect(err).ShouldNot(HaveOccurred())
 			})
-			// TODO update condition once API is fixed
-			It(fmt.Sprintf("Should succeed if flag %s is given 'invalid' value", flagOrderBy), func() {
+
+			It(fmt.Sprintf("Should fail if flag %s is given 'invalid' value", flagOrderBy), func() {
 				args := []string{cmdGet, cmdBackup, flagOrderBy, "invalid"}
 				args = append(args, commonArgs...)
 				cmd := exec.Command(targetBrowserBinaryFilePath, args...)
-				_, err := cmd.CombinedOutput()
-				Expect(err).ShouldNot(HaveOccurred())
+				output, err := cmd.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("400 Bad Request"))
 			})
 
 			It("Should fail if path param is given 'invalidUID' value", func() {
@@ -1032,7 +1024,7 @@ var _ = Describe("Target Browser Tests", func() {
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given valid format timestamp value", flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%sT%sZ", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%sT%sZ", backupCreationEndDate, startTime)}
 				backupData := runCmdBackup(args)
 				Expect(len(backupData)).To(Equal(cmd.PageSizeDefault))
 			})
@@ -1044,20 +1036,20 @@ var _ = Describe("Target Browser Tests", func() {
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given invalid format timestamp without 'T' value", flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%s %sZ", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%s %sZ", backupCreationEndDate, startTime)}
 				backupData := runCmdBackup(args)
 				Expect(len(backupData)).To(Equal(cmd.PageSizeDefault))
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given invalid format timestamp without 'Z' value", flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%sT%s", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%sT%s", backupCreationEndDate, startTime)}
 				backupData := runCmdBackup(args)
 				Expect(len(backupData)).To(Equal(cmd.PageSizeDefault))
 			})
 
 			It(fmt.Sprintf("Should succeed if flag %s is given invalid format timestamp without 'T' & 'Z' value",
 				flagCreationStartTime), func() {
-				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%s %s", backupCreationEndDate, cmd.StartTime)}
+				args := []string{cmdGet, cmdBackup, flagCreationStartTime, fmt.Sprintf("%s %s", backupCreationEndDate, startTime)}
 				backupData := runCmdBackup(args)
 				Expect(len(backupData)).To(Equal(cmd.PageSizeDefault))
 			})
@@ -1188,11 +1180,10 @@ var _ = Describe("Target Browser Tests", func() {
 						guid.New().String(),
 					}
 					for _, value := range tvkInstanceIDValues {
-						_, err := exec.Command(createBackupScript, "1", "1", "mutate-tvk-id", value).Output()
-						Expect(err).To(BeNil())
+						createBackups(1, 1, value, "mutate-tvk-id")
 					}
-					time.Sleep(2 * time.Minute) // wait to sync data on target browser
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(2, 2)
+					verifyBrowserCacheBPlan(2)
 				})
 			})
 			AfterEach(func() {
@@ -1257,18 +1248,13 @@ var _ = Describe("Target Browser Tests", func() {
 					backupUID = guid.New().String()
 					clusterBackupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfClusterBackupPlansToCreate),
-						strconv.Itoa(noOfClusterBackupsToCreatePerClusterBackupPlan), "cluster_backup", clusterBackupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
-					output, _ = exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID).Output()
-					log.Info("Shell Script Output: ", string(output))
-
+					createBackups(noOfClusterBackupPlansToCreate, noOfClusterBackupsToCreatePerClusterBackupPlan, clusterBackupUID, "cluster_backup")
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate+noOfClusterBackupPlansToCreate,
 						noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan+
 							noOfClusterBackupsToCreatePerClusterBackupPlan*noOfClusterBackupPlansToCreate)
 					//wait to sync data on target browser
-					time.Sleep(2 * time.Minute)
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate + noOfClusterBackupPlansToCreate)
 				})
 			})
 
@@ -1367,19 +1353,15 @@ var _ = Describe("Target Browser Tests", func() {
 				once                             sync.Once
 				isLast                           bool
 				backupUID                        string
-				expectedEmptyMetadata            = `{"custom": {}}`
 			)
 
 			BeforeEach(func() {
 				once.Do(func() {
 					backupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "all_type_backup", backupUID).Output()
-
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "all_type_backup")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
-					time.Sleep(2 * time.Minute) //wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate)
 				})
 			})
 
@@ -1390,15 +1372,6 @@ var _ = Describe("Target Browser Tests", func() {
 					removeBackupPlanDir(backupPlanUIDs)
 				}
 			})
-			It(fmt.Sprintf("Should fail if flag %s and %s not given", cmd.BackupPlanUIDFlag, cmd.BackupUIDFlag), func() {
-				args := []string{cmdGet, cmdMetadata}
-				args = append(args, commonArgs...)
-				command := exec.Command(targetBrowserBinaryFilePath, args...)
-				output, err := command.CombinedOutput()
-				Expect(err).Should(HaveOccurred())
-				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("required flag(s) \"%s\", \"%s\" not set",
-					cmd.BackupPlanUIDFlag, cmd.BackupUIDFlag)))
-			})
 
 			It(fmt.Sprintf("Should fail if flag %s not given", cmd.BackupUIDFlag), func() {
 				args := []string{cmdGet, cmdMetadata, flagBackupPlanUIDFlag, backupPlanUIDs[0]}
@@ -1408,16 +1381,6 @@ var _ = Describe("Target Browser Tests", func() {
 				Expect(err).Should(HaveOccurred())
 				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("required flag(s) \"%s\" not set",
 					cmd.BackupUIDFlag)))
-			})
-
-			It(fmt.Sprintf("Should fail if flag %s not given", cmd.BackupPlanUIDFlag), func() {
-				args := []string{cmdGet, cmdMetadata, flagBackupUIDFlag, backupUID}
-				args = append(args, commonArgs...)
-				command := exec.Command(targetBrowserBinaryFilePath, args...)
-				output, err := command.CombinedOutput()
-				Expect(err).Should(HaveOccurred())
-				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("required flag(s) \"%s\" not set",
-					cmd.BackupPlanUIDFlag)))
 			})
 
 			It(fmt.Sprintf("Should fail if flag %s is given without value", cmd.BackupPlanUIDFlag), func() {
@@ -1440,22 +1403,40 @@ var _ = Describe("Target Browser Tests", func() {
 				Expect(string(output)).Should(ContainSubstring(fmt.Sprintf("flag needs an argument: %s", flagBackupUIDFlag)))
 			})
 
-			It(fmt.Sprintf("Should get empty  metadata if flag %s is given zero value", cmd.BackupUIDFlag), func() {
+			It(fmt.Sprintf("Should fail  metadata if flag %s is given zero value", cmd.BackupUIDFlag), func() {
 				args := []string{cmdGet, cmdMetadata, flagBackupPlanUIDFlag, backupPlanUIDs[0], flagBackupUIDFlag, ""}
 				args = append(args, commonArgs...)
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
 				output, err := command.CombinedOutput()
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(reflect.DeepEqual(expectedEmptyMetadata, output))
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("404 Not Found"))
 			})
 
-			It(fmt.Sprintf("Should get empty  metadata if flag %s is given zero value", cmd.BackupPlanUIDFlag), func() {
+			It(fmt.Sprintf("Should fail  metadata if flag %s is given invalid value", cmd.BackupUIDFlag), func() {
+				args := []string{cmdGet, cmdMetadata, flagBackupPlanUIDFlag, backupPlanUIDs[0], flagBackupUIDFlag, "invalid"}
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).Should(HaveOccurred())
+				Expect(string(output)).Should(ContainSubstring("404 Not Found"))
+			})
+
+			It(fmt.Sprintf("Should filter metadata if flag %s is given zero value", cmd.BackupPlanUIDFlag), func() {
 				args := []string{cmdGet, cmdMetadata, flagBackupPlanUIDFlag, "", flagBackupUIDFlag, backupUID}
 				args = append(args, commonArgs...)
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
 				output, err := command.CombinedOutput()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(reflect.DeepEqual(expectedEmptyMetadata, output))
+				validateMetadata(output, "backup-metadata-all.json")
+			})
+
+			It(fmt.Sprintf("Should filter metadata if flag %s is given valid value", cmd.BackupPlanUIDFlag), func() {
+				args := []string{cmdGet, cmdMetadata, flagBackupUIDFlag, backupUID}
+				args = append(args, commonArgs...)
+				command := exec.Command(targetBrowserBinaryFilePath, args...)
+				output, err := command.CombinedOutput()
+				Expect(err).ShouldNot(HaveOccurred())
+				validateMetadata(output, "backup-metadata-all.json")
 			})
 
 			It("Should filter metadata on BackupPlan and backup", func() {
@@ -1465,13 +1446,7 @@ var _ = Describe("Target Browser Tests", func() {
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
 				output, err := command.CombinedOutput()
 				Expect(err).ShouldNot(HaveOccurred())
-				re := regexp.MustCompile("(?m)[\r\n]+^.*location.*$")
-				metadata := re.ReplaceAllString(string(output), "")
-				jsonFile, err := os.Open(filepath.Join(testDataDirRelPath, "backup-metadata-all.json"))
-				Expect(err).To(BeNil())
-				defer jsonFile.Close()
-				expectedMetadata, _ := ioutil.ReadAll(jsonFile)
-				Expect(reflect.DeepEqual(expectedMetadata, metadata))
+				validateMetadata(output, "backup-metadata-all.json")
 			})
 		})
 
@@ -1489,12 +1464,9 @@ var _ = Describe("Target Browser Tests", func() {
 				once.Do(func() {
 					backupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID, "helm").Output()
-
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup", "helm")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
-					time.Sleep(1 * time.Minute) //wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate)
 				})
 			})
 
@@ -1513,14 +1485,8 @@ var _ = Describe("Target Browser Tests", func() {
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
 				output, err := command.CombinedOutput()
 				Expect(err).ShouldNot(HaveOccurred())
-				log.Infof("Metadata is %s", output)
-				re := regexp.MustCompile("(?m)[\r\n]+^.*location.*$")
-				metadata := re.ReplaceAllString(string(output), "")
-				jsonFile, err := os.Open(filepath.Join(testDataDirRelPath, "backup-metadata-helm.json"))
-				Expect(err).To(BeNil())
-				defer jsonFile.Close()
-				expectedMetadata, _ := ioutil.ReadAll(jsonFile)
-				Expect(reflect.DeepEqual(expectedMetadata, metadata))
+				log.Debugf("Metadata is %s", output)
+				validateMetadata(output, "backup-metadata-helm.json")
 			})
 		})
 		Context("Filter Operations on of backupPlan & backup for custom type backup", func() {
@@ -1537,12 +1503,9 @@ var _ = Describe("Target Browser Tests", func() {
 				once.Do(func() {
 					backupUID = guid.New().String()
 					createTarget(true)
-					output, _ := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
-						strconv.Itoa(noOfBackupsToCreatePerBackupPlan), "backup", backupUID, "custom").Output()
-
-					log.Info("Shell Script Output: ", string(output))
+					createBackups(noOfBackupPlansToCreate, noOfBackupsToCreatePerBackupPlan, backupUID, "backup", "custom")
 					backupPlanUIDs = verifyBackupPlansAndBackupsOnNFS(noOfBackupPlansToCreate, noOfBackupPlansToCreate*noOfBackupsToCreatePerBackupPlan)
-					time.Sleep(1 * time.Minute) //wait to sync data on target browser
+					verifyBrowserCacheBPlan(noOfBackupPlansToCreate)
 				})
 			})
 
@@ -1561,14 +1524,8 @@ var _ = Describe("Target Browser Tests", func() {
 				command := exec.Command(targetBrowserBinaryFilePath, args...)
 				output, err := command.CombinedOutput()
 				Expect(err).ShouldNot(HaveOccurred())
-				log.Infof("Metadata is %s", output)
-				re := regexp.MustCompile("(?m)[\r\n]+^.*location.*$")
-				metadata := re.ReplaceAllString(string(output), "")
-				jsonFile, err := os.Open(filepath.Join(testDataDirRelPath, "backup-metadata-custom.json"))
-				Expect(err).To(BeNil())
-				defer jsonFile.Close()
-				expectedMetadata, _ := ioutil.ReadAll(jsonFile)
-				Expect(reflect.DeepEqual(expectedMetadata, metadata))
+				log.Debugf("Metadata is %s", output)
+				validateMetadata(output, "backup-metadata-custom.json")
 			})
 		})
 	})
@@ -1589,4 +1546,14 @@ func removeBackupPlanDir(backupPlanUIDs []string) {
 		_, err := shell.RmRf(filepath.Join(TargetLocation, backupPlans))
 		Expect(err).To(BeNil())
 	}
+}
+
+func validateMetadata(data []byte, metadataFileName string) {
+	re := regexp.MustCompile("(?m)[\r\n]+^.*location.*$")
+	metadata := re.ReplaceAllString(string(data), "")
+	jsonFile, err := os.Open(filepath.Join(testDataDirRelPath, metadataFileName))
+	Expect(err).To(BeNil())
+	defer jsonFile.Close()
+	expectedMetadata, _ := ioutil.ReadAll(jsonFile)
+	Expect(reflect.DeepEqual(expectedMetadata, metadata))
 }

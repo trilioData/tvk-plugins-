@@ -103,9 +103,5 @@ func getBackupList(args []string) error {
 		ExpirationStartTimestamp: expirationStartTime,
 		ExpirationEndTimestamp:   expirationEndTime,
 	}
-	err := targetBrowserAuthConfig.GetBackups(&bpOptions, args)
-	if err != nil {
-		return err
-	}
-	return nil
+	return targetBrowserAuthConfig.GetBackups(&bpOptions, args)
 }

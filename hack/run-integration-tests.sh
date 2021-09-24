@@ -56,7 +56,7 @@ helm_install() {
   echo "Installing TVK application in namespace - ${install_namespace}"
 
   common_args="applicationScope=Namespaced"
-  resources_args="backend.resources.limits.memory=1024Mi,backend.livenessProbeEnable=false,backend.resources.limits.memory=1024Mi,control-plane.resources.limits.memory=1024Mi"
+  resources_args="web-backend.resources.limits.memory=1024Mi,web-backend.livenessProbeEnable=false,web-backend.resources.requests.memory=10Mi,control-plane.resources.limits.memory=1024Mi"
   ARGS="imagePullPolicy=Always,${common_args},${resources_args}"
 
   DEV_REPO="http://charts.k8strilio.net/trilio-dev/k8s-triliovault"

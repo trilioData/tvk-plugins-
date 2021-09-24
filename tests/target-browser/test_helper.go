@@ -255,11 +255,7 @@ func updateYAMLs(kv map[string]string, yamlPath string) error {
 		}
 	}
 
-	if writeErr := ioutil.WriteFile(yamlPath, []byte(updatedFile), 0); writeErr != nil {
-		return writeErr
-	}
-
-	return nil
+	return ioutil.WriteFile(yamlPath, []byte(updatedFile), 0)
 }
 
 func GetSecret(ctx context.Context, k8sClient client.Client, name, ns string) *corev1.Secret {

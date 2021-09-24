@@ -70,10 +70,5 @@ func getResourceMetadata(*cobra.Command, []string) error {
 		OutputFormat:  outputFormat,
 	}
 
-	err := targetBrowserAuthConfig.GetResourceMetadata(&resourceMdOptions)
-	if err != nil {
-		return err
-	}
-	return nil
-
+	return targetBrowserAuthConfig.GetResourceMetadata(&resourceMdOptions)
 }

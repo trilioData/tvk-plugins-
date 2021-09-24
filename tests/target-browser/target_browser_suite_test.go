@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -32,6 +33,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/trilioData/tvk-plugins/cmd/target-browser/cmd"
 	"github.com/trilioData/tvk-plugins/internal"
 	"github.com/trilioData/tvk-plugins/internal/utils/shell"
 	targetbrowser "github.com/trilioData/tvk-plugins/tools/target-browser"
@@ -197,9 +199,9 @@ func runCmdBackupPlan(args []string) []targetbrowser.BackupPlan {
 	var output []byte
 	var err error
 	Eventually(func() bool {
-		cmd := exec.Command(targetBrowserBinaryFilePath, args...)
-		log.Info("BackupPlan command is: ", cmd)
-		output, err = cmd.CombinedOutput()
+		command := exec.Command(targetBrowserBinaryFilePath, args...)
+		log.Info("BackupPlan command is: ", command)
+		output, err = command.CombinedOutput()
 		if err != nil {
 			log.Errorf(fmt.Sprintf("Error to execute command %s", err.Error()))
 		}
@@ -244,9 +246,9 @@ func runCmdBackup(args []string) []targetbrowser.Backup {
 	var err error
 	args = append(args, commonArgs...)
 	Eventually(func() bool {
-		cmd := exec.Command(targetBrowserBinaryFilePath, args...)
-		log.Info("Backup command is: ", cmd)
-		output, err = cmd.CombinedOutput()
+		command := exec.Command(targetBrowserBinaryFilePath, args...)
+		log.Info("Backup command is: ", command)
+		output, err = command.CombinedOutput()
 		if err != nil {
 			log.Infof(fmt.Sprintf("Error to execute command %s", err.Error()))
 		}
@@ -350,4 +352,19 @@ func getTargetBrowserIngress() *v1beta1.Ingress {
 	}
 
 	return nil
+}
+
+func verifyBrowserCacheBPlan(noOfBackupPlan int) {
+	args := []string{cmdGet, cmdBackupPlan}
+	Eventually(func() bool {
+		backupPlanData := runCmdBackupPlan(args)
+		return len(backupPlanData) == noOfBackupPlan || len(backupPlanData) == cmd.PageSizeDefault
+	}, timeout, apiRetryTimeout).Should(BeTrue())
+}
+
+func createBackups(noOfBackupPlansToCreate, noOfBackupsToCreate int, backupUID, backupType string, extraParams ...string) {
+	output, err := exec.Command(createBackupScript, strconv.Itoa(noOfBackupPlansToCreate),
+		strconv.Itoa(noOfBackupsToCreate), backupType, backupUID, strings.Join(extraParams, ",")).Output()
+	Expect(err).To(BeNil())
+	log.Info("Shell Script Output: ", string(output))
 }

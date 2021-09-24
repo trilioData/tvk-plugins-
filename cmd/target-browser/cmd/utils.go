@@ -7,11 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-const (
-	EndTime   = "23:59:59"
-	StartTime = "00:00:00"
-)
-
 func removeDuplicates(uids []string) []string {
 	uniqueUIDs := sets.String{}
 	for _, uid := range uids {

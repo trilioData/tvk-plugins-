@@ -48,10 +48,5 @@ func getTrilioResources(args []string) error {
 		CommonListOptions: commonOptions,
 	}
 
-	err := targetBrowserAuthConfig.GetTrilioResources(&trilioResourcesOptions, args)
-	if err != nil {
-		return err
-	}
-	return nil
-
+	return targetBrowserAuthConfig.GetTrilioResources(&trilioResourcesOptions, args)
 }

@@ -62,10 +62,5 @@ func getBackupPlanList(args []string) error {
 	bpOptions := targetBrowser.BackupPlanListOptions{
 		CommonListOptions: commonOptions,
 	}
-
-	err := targetBrowserAuthConfig.GetBackupPlans(&bpOptions, args)
-	if err != nil {
-		return err
-	}
-	return nil
+	return targetBrowserAuthConfig.GetBackupPlans(&bpOptions, args)
 }

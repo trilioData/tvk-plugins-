@@ -1,36 +1,27 @@
 {
+  "kind": "Backup",
+  "apiVersion": "triliovault.trilio.io/v1",
   "metadata": {
     "name": "sample-backup",
-    "namespace": "temp-ns",
-    "selfLink": "/apis/triliovault.trilio.io/v1/namespaces/temp-ns/backups/sample-backup",
+    "namespace": "test-ns",
+    "selfLink": "/apis/triliovault.trilio.io/v1/namespaces/test-ns/backups/sample-backup",
     "uid": "BACKUP-UUID",
-    "resourceVersion": "164466722",
+    "resourceVersion": "83494635",
     "generation": 1,
-    "creationTimestamp": "2021-05-18T17:39:21Z",
+    "creationTimestamp": "2021-09-21T06:55:53Z",
     "annotations": {
-      "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"triliovault.trilio.io/v1\",\"kind\":\"Backup\",\"metadata\":{\"annotations\":{},\"name\":\"sample-backup\",\"namespace\":\"temp-ns\"},\"spec\":{\"backupPlan\":{\"name\":\"sample-backupplan\"},\"type\":\"Full\"}}\n"
-    },
-    "ownerReferences": [
-      {
-        "apiVersion": "triliovault.trilio.io/v1",
-        "kind": "BackupPlan",
-        "name": "sample-backupplan",
-        "uid": "BACKUPPLAN-UUID"
-      }
-    ],
-    "finalizers": [
-      "backup-cleanup-finalizer"
-    ]
+      "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"triliovault.trilio.io/v1\",\"kind\":\"Backup\",\"metadata\":{\"annotations\":{},\"name\":\"sample-backup\",\"namespace\":\"test-ns\"},\"spec\":{\"backupPlan\":{\"name\":\"sample-backupplan\",\"namespace\":\"test-ns\"},\"type\":\"Full\"}}\n"
+    }
   },
   "spec": {
     "type": "Full",
     "backupPlan": {
       "kind": "BackupPlan",
-      "namespace": "temp-ns",
+      "namespace": "test-ns",
       "name": "sample-backupplan",
       "uid": "BACKUPPLAN-UUID",
       "apiVersion": "triliovault.trilio.io/v1",
-      "resourceVersion": "164463144"
+      "resourceVersion": "83489820"
     }
   },
   "status": {
@@ -38,392 +29,630 @@
     "applicationType": "Custom",
     "type": "Full",
     "location": "BACKUPPLAN-UUID/BACKUP-UUID",
-    "startTimestamp": "2021-05-18T17:39:21Z",
-    "completionTimestamp": "2021-05-10T20:11:06Z",
+    "startTimestamp": "2021-09-21T06:55:53Z",
+    "completionTimestamp": "2021-09-21T07:00:08Z",
     "phase": "MetadataUpload",
     "phaseStatus": "InProgress",
     "status": "Available",
-    "size": "238886912",
+    "size": "745590784",
     "percentageCompletion": 100,
     "snapshot": {
-      "helmCharts": [
-        {
-          "release": "mysql",
-          "revision": 1,
-          "resources": [
+      "helmCharts": [{
+        "release": "cockroachdb-app",
+        "revision": 1,
+        "resources": [{
+          "groupVersionKind": {
+            "group": "policy",
+            "version": "v1beta1",
+            "kind": "PodDisruptionBudget"
+          },
+          "objects": [
+            "cockroachdb-app-budget"
+          ]
+        },
+          {
+            "groupVersionKind": {
+              "version": "v1",
+              "kind": "Service"
+            },
+            "objects": [
+              "cockroachdb-app",
+              "cockroachdb-app-public"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "group": "apps",
+              "version": "v1",
+              "kind": "StatefulSet"
+            },
+            "objects": [
+              "cockroachdb-app"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "group": "batch",
+              "version": "v1",
+              "kind": "Job"
+            },
+            "objects": [
+              "cockroachdb-app-init"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "version": "v1",
+              "kind": "Secret"
+            },
+            "objects": [
+              "sh.helm.release.v1.cockroachdb-app.v1"
+            ]
+          }
+        ],
+        "storageBackend": "Secret",
+        "version": "v3",
+        "dataSnapshots": [{
+          "backupType": "Full",
+          "location": "BACKUPPLAN-UUID/BACKUP-UUID/helm/cockroachdb-app/data-snapshot/datadir-cockroachdb-app-0",
+          "persistentVolumeClaimName": "datadir-cockroachdb-app-0",
+          "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\"},\"creationTimestamp\":\"2021-09-21T06:44:22Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app.kubernetes.io/component\":\"cockroachdb\",\"app.kubernetes.io/instance\":\"cockroachdb-app\",\"app.kubernetes.io/name\":\"cockroachdb\"},\"managedFields\":[{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:pv.kubernetes.io/bind-completed\":{},\"f:pv.kubernetes.io/bound-by-controller\":{},\"f:volume.beta.kubernetes.io/storage-provisioner\":{}},\"f:labels\":{\".\":{},\"f:app.kubernetes.io/component\":{},\"f:app.kubernetes.io/instance\":{},\"f:app.kubernetes.io/name\":{}}},\"f:spec\":{\"f:accessModes\":{},\"f:resources\":{\"f:requests\":{\".\":{},\"f:storage\":{}}},\"f:volumeMode\":{},\"f:volumeName\":{}},\"f:status\":{\"f:accessModes\":{},\"f:capacity\":{\".\":{},\"f:storage\":{}},\"f:phase\":{}}},\"manager\":\"kube-controller-manager\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:44:26Z\"}],\"name\":\"datadir-cockroachdb-app-0\",\"namespace\":\"test-ns\",\"resourceVersion\":\"83481297\",\"selfLink\":\"/api/v1/namespaces/test-ns/persistentvolumeclaims/datadir-cockroachdb-app-0\",\"uid\":\"104ef193-99ab-4498-8672-2f78365fa072\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-104ef193-99ab-4498-8672-2f78365fa072\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"100Gi\"},\"phase\":\"Bound\"}}\n",
+          "volumeSnapshot": {
+            "volumeSnapshot": {
+              "kind": "VolumeSnapshot",
+              "namespace": "test-ns",
+              "name": "datadir-cockroachdb-app-0-0c46b601-7d1b-4f7d-a2df-a84461eeac27",
+              "uid": "26484337-6b99-4103-8b59-8e38aa2eaafc",
+              "apiVersion": "snapshot.storage.k8s.io/v1beta1",
+              "resourceVersion": "83492042"
+            },
+            "retryCount": 1,
+            "status": "Completed"
+          },
+          "snapshotSize": "107374182400",
+          "size": "60497920",
+          "uploaded": true,
+          "podContainersMap": [{
+            "podName": "cockroachdb-app-0",
+            "containers": [
+              "db"
+            ]
+          }],
+          "conditions": [{
+            "status": "InProgress",
+            "timestamp": "2021-09-21T06:56:33Z",
+            "reason": "Snapshot InProgress",
+            "phase": "Snapshot"
+          },
             {
-              "groupVersionKind": {
-                "group": "apps",
-                "version": "v1",
-                "kind": "Deployment"
-              },
-              "objects": [
-                "mysql"
-              ]
+              "status": "Completed",
+              "timestamp": "2021-09-21T06:57:07Z",
+              "reason": "Snapshot Completed",
+              "phase": "Snapshot"
             },
             {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "Secret"
-              },
-              "objects": [
-                "mysql",
-                "sh.helm.release.v1.mysql.v1"
-              ]
+              "status": "InProgress",
+              "timestamp": "2021-09-21T06:57:07Z",
+              "reason": "Upload InProgress",
+              "phase": "Upload"
             },
             {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "ConfigMap"
-              },
-              "objects": [
-                "mysql-test"
-              ]
-            },
-            {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "Service"
-              },
-              "objects": [
-                "helm-mysql-mysql"
-              ]
-            }
-          ],
-          "storageBackend": "Secret",
-          "version": "v3",
-          "dataSnapshots": [
-            {
-              "backupType": "Full",
-              "location": "BACKUPPLAN-UUID/BACKUP-UUID/helm/mysql/data-snapshot/mysql",
-              "persistentVolumeClaimName": "mysql",
-              "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"meta.helm.sh/release-name\":\"mysql\",\"meta.helm.sh/release-namespace\":\"temp-ns\",\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\",\"volume.kubernetes.io/selected-node\":\"gke-dev-cluster-dev-cluster-pool-eab0992b-0zp2\"},\"creationTimestamp\":\"2021-05-18T06:15:49Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app\":\"mysql\",\"app.kubernetes.io/managed-by\":\"Helm\",\"chart\":\"mysql-1.6.2\",\"heritage\":\"Helm\",\"release\":\"mysql\"},\"name\":\"mysql\",\"namespace\":\"temp-ns\",\"resourceVersion\":\"164398856\",\"selfLink\":\"/api/v1/namespaces/temp-ns/persistentvolumeclaims/mysql\",\"uid\":\"613be9f8-c4c8-4557-bd27-4f6c64629c7d\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"1Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-613be9f8-c4c8-4557-bd27-4f6c64629c7d\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"1Gi\"},\"phase\":\"Bound\"}}\n",
-              "volumeSnapshot": {
-                "volumeSnapshot": {
-                  "kind": "VolumeSnapshot",
-                  "namespace": "temp-ns",
-                  "name": "mysql-9d654196-0cd6-4d5b-944f-785b6e44d495",
-                  "uid": "3fc7b7c9-43f8-45f2-a342-b2fbcd8474b2",
-                  "apiVersion": "snapshot.storage.k8s.io/v1beta1",
-                  "resourceVersion": "164465258"
-                },
-                "retryCount": 1,
-                "status": "Completed"
-              },
-              "snapshotSize": "1073741824",
-              "size": "238886912",
-              "uploaded": true,
-              "podContainersMap": [
-                {
-                  "podName": "mysql-7df4dccf76-9sgxd",
-                  "containers": [
-                    "mysql"
-                  ]
-                }
-              ],
-              "conditions": [
-                {
-                  "status": "InProgress",
-                  "timestamp": "2021-05-18T17:39:35Z",
-                  "reason": "Snapshot InProgress",
-                  "phase": "Snapshot"
-                },
-                {
-                  "status": "Completed",
-                  "timestamp": "2021-05-18T17:41:12Z",
-                  "reason": "Snapshot Completed",
-                  "phase": "Snapshot"
-                },
-                {
-                  "status": "InProgress",
-                  "timestamp": "2021-05-18T17:41:12Z",
-                  "reason": "Upload InProgress",
-                  "phase": "Upload"
-                },
-                {
-                  "status": "Completed",
-                  "timestamp": "2021-05-18T17:43:06Z",
-                  "reason": "Upload Completed",
-                  "phase": "Upload"
-                }
-              ]
+              "status": "Completed",
+              "timestamp": "2021-09-21T06:59:57Z",
+              "reason": "Upload Completed",
+              "phase": "Upload"
             }
           ]
-        }
-      ],
-      "custom": [
-        {
-          "release": "mysql",
-          "revision": 1,
-          "resources": [
-            {
-              "groupVersionKind": {
-                "group": "apps",
-                "version": "v1",
-                "kind": "Deployment"
-              },
-              "objects": [
-                "mysql"
-              ]
-            },
-            {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "Secret"
-              },
-              "objects": [
-                "mysql",
-                "sh.helm.release.v1.mysql.v1"
-              ]
-            },
-            {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "ConfigMap"
-              },
-              "objects": [
-                "mysql-test"
-              ]
-            },
-            {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "Service"
-              },
-              "objects": [
-                "helm-mysql-mysql"
-              ]
-            }
-          ],
-          "storageBackend": "Secret",
-          "version": "v3",
-          "dataSnapshots": [
-            {
-              "backupType": "Full",
-              "location": "BACKUPPLAN-UUID/BACKUP-UUID/helm/mysql/data-snapshot/mysql",
-              "persistentVolumeClaimName": "mysql",
-              "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"meta.helm.sh/release-name\":\"mysql\",\"meta.helm.sh/release-namespace\":\"temp-ns\",\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\",\"volume.kubernetes.io/selected-node\":\"gke-dev-cluster-dev-cluster-pool-eab0992b-0zp2\"},\"creationTimestamp\":\"2021-05-18T06:15:49Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app\":\"mysql\",\"app.kubernetes.io/managed-by\":\"Helm\",\"chart\":\"mysql-1.6.2\",\"heritage\":\"Helm\",\"release\":\"mysql\"},\"name\":\"mysql\",\"namespace\":\"temp-ns\",\"resourceVersion\":\"164398856\",\"selfLink\":\"/api/v1/namespaces/temp-ns/persistentvolumeclaims/mysql\",\"uid\":\"613be9f8-c4c8-4557-bd27-4f6c64629c7d\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"1Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-613be9f8-c4c8-4557-bd27-4f6c64629c7d\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"1Gi\"},\"phase\":\"Bound\"}}\n",
+        },
+          {
+            "backupType": "Full",
+            "location": "BACKUPPLAN-UUID/BACKUP-UUID/helm/cockroachdb-app/data-snapshot/datadir-cockroachdb-app-1",
+            "persistentVolumeClaimName": "datadir-cockroachdb-app-1",
+            "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\"},\"creationTimestamp\":\"2021-09-21T06:44:22Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app.kubernetes.io/component\":\"cockroachdb\",\"app.kubernetes.io/instance\":\"cockroachdb-app\",\"app.kubernetes.io/name\":\"cockroachdb\"},\"managedFields\":[{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:pv.kubernetes.io/bind-completed\":{},\"f:pv.kubernetes.io/bound-by-controller\":{},\"f:volume.beta.kubernetes.io/storage-provisioner\":{}},\"f:labels\":{\".\":{},\"f:app.kubernetes.io/component\":{},\"f:app.kubernetes.io/instance\":{},\"f:app.kubernetes.io/name\":{}}},\"f:spec\":{\"f:accessModes\":{},\"f:resources\":{\"f:requests\":{\".\":{},\"f:storage\":{}}},\"f:volumeMode\":{},\"f:volumeName\":{}},\"f:status\":{\"f:accessModes\":{},\"f:capacity\":{\".\":{},\"f:storage\":{}},\"f:phase\":{}}},\"manager\":\"kube-controller-manager\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:44:26Z\"}],\"name\":\"datadir-cockroachdb-app-1\",\"namespace\":\"test-ns\",\"resourceVersion\":\"83481308\",\"selfLink\":\"/api/v1/namespaces/test-ns/persistentvolumeclaims/datadir-cockroachdb-app-1\",\"uid\":\"427665b6-3927-42d3-ada1-07ce4660bc54\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-427665b6-3927-42d3-ada1-07ce4660bc54\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"100Gi\"},\"phase\":\"Bound\"}}\n",
+            "volumeSnapshot": {
               "volumeSnapshot": {
-                "volumeSnapshot": {
-                  "kind": "VolumeSnapshot",
-                  "namespace": "temp-ns",
-                  "name": "mysql-9d654196-0cd6-4d5b-944f-785b6e44d495",
-                  "uid": "3fc7b7c9-43f8-45f2-a342-b2fbcd8474b2",
-                  "apiVersion": "snapshot.storage.k8s.io/v1beta1",
-                  "resourceVersion": "164465258"
-                },
-                "retryCount": 1,
-                "status": "Completed"
+                "kind": "VolumeSnapshot",
+                "namespace": "test-ns",
+                "name": "datadir-cockroachdb-app-1-019b7872-feb7-42a6-a799-52a61c7041f4",
+                "uid": "6f0d2763-cffe-480a-86e0-8cdc60f62e95",
+                "apiVersion": "snapshot.storage.k8s.io/v1beta1",
+                "resourceVersion": "83491937"
               },
-              "snapshotSize": "1073741824",
-              "size": "238886912",
-              "uploaded": true,
-              "podContainersMap": [
-                {
-                  "podName": "mysql-7df4dccf76-9sgxd",
-                  "containers": [
-                    "mysql"
-                  ]
-                }
-              ],
-              "conditions": [
-                {
-                  "status": "InProgress",
-                  "timestamp": "2021-05-18T17:39:35Z",
-                  "reason": "Snapshot InProgress",
-                  "phase": "Snapshot"
-                },
-                {
-                  "status": "Completed",
-                  "timestamp": "2021-05-18T17:41:12Z",
-                  "reason": "Snapshot Completed",
-                  "phase": "Snapshot"
-                },
-                {
-                  "status": "InProgress",
-                  "timestamp": "2021-05-18T17:41:12Z",
-                  "reason": "Upload InProgress",
-                  "phase": "Upload"
-                },
-                {
-                  "status": "Completed",
-                  "timestamp": "2021-05-18T17:43:06Z",
-                  "reason": "Upload Completed",
-                  "phase": "Upload"
-                }
+              "retryCount": 1,
+              "status": "Completed"
+            },
+            "snapshotSize": "107374182400",
+            "size": "58400768",
+            "uploaded": true,
+            "podContainersMap": [{
+              "podName": "cockroachdb-app-1",
+              "containers": [
+                "db"
               ]
+            }],
+            "conditions": [{
+              "status": "InProgress",
+              "timestamp": "2021-09-21T06:56:33Z",
+              "reason": "Snapshot InProgress",
+              "phase": "Snapshot"
+            },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T06:57:02Z",
+                "reason": "Snapshot Completed",
+                "phase": "Snapshot"
+              },
+              {
+                "status": "InProgress",
+                "timestamp": "2021-09-21T06:57:02Z",
+                "reason": "Upload InProgress",
+                "phase": "Upload"
+              },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T06:58:28Z",
+                "reason": "Upload Completed",
+                "phase": "Upload"
+              }
+            ]
+          },
+          {
+            "backupType": "Full",
+            "location": "BACKUPPLAN-UUID/BACKUP-UUID/helm/cockroachdb-app/data-snapshot/datadir-cockroachdb-app-2",
+            "persistentVolumeClaimName": "datadir-cockroachdb-app-2",
+            "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\"},\"creationTimestamp\":\"2021-09-21T06:44:22Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app.kubernetes.io/component\":\"cockroachdb\",\"app.kubernetes.io/instance\":\"cockroachdb-app\",\"app.kubernetes.io/name\":\"cockroachdb\"},\"managedFields\":[{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:pv.kubernetes.io/bind-completed\":{},\"f:pv.kubernetes.io/bound-by-controller\":{},\"f:volume.beta.kubernetes.io/storage-provisioner\":{}},\"f:labels\":{\".\":{},\"f:app.kubernetes.io/component\":{},\"f:app.kubernetes.io/instance\":{},\"f:app.kubernetes.io/name\":{}}},\"f:spec\":{\"f:accessModes\":{},\"f:resources\":{\"f:requests\":{\".\":{},\"f:storage\":{}}},\"f:volumeMode\":{},\"f:volumeName\":{}},\"f:status\":{\"f:accessModes\":{},\"f:capacity\":{\".\":{},\"f:storage\":{}},\"f:phase\":{}}},\"manager\":\"kube-controller-manager\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:44:26Z\"}],\"name\":\"datadir-cockroachdb-app-2\",\"namespace\":\"test-ns\",\"resourceVersion\":\"83481305\",\"selfLink\":\"/api/v1/namespaces/test-ns/persistentvolumeclaims/datadir-cockroachdb-app-2\",\"uid\":\"034e92b9-b4c3-431a-b7a1-5cf5edf05096\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-034e92b9-b4c3-431a-b7a1-5cf5edf05096\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"100Gi\"},\"phase\":\"Bound\"}}\n",
+            "volumeSnapshot": {
+              "volumeSnapshot": {
+                "kind": "VolumeSnapshot",
+                "namespace": "test-ns",
+                "name": "datadir-cockroachdb-app-2-4af6646a-8da9-4c86-a288-fde862aa53ca",
+                "uid": "a4e49aa4-9870-45f6-98d1-3881a0dfcd2d",
+                "apiVersion": "snapshot.storage.k8s.io/v1beta1",
+                "resourceVersion": "83491976"
+              },
+              "retryCount": 1,
+              "status": "Completed"
+            },
+            "snapshotSize": "107374182400",
+            "size": "58855424",
+            "uploaded": true,
+            "podContainersMap": [{
+              "podName": "cockroachdb-app-2",
+              "containers": [
+                "db"
+              ]
+            }],
+            "conditions": [{
+              "status": "InProgress",
+              "timestamp": "2021-09-21T06:56:33Z",
+              "reason": "Snapshot InProgress",
+              "phase": "Snapshot"
+            },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T06:57:04Z",
+                "reason": "Snapshot Completed",
+                "phase": "Snapshot"
+              },
+              {
+                "status": "InProgress",
+                "timestamp": "2021-09-21T06:57:04Z",
+                "reason": "Upload InProgress",
+                "phase": "Upload"
+              },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T06:59:58Z",
+                "reason": "Upload Completed",
+                "phase": "Upload"
+              }
+            ]
+          }
+        ]
+      }],
+      "operators": [{
+        "operatorId": "demo-etcd-cluster",
+        "customResources": [{
+          "groupVersionKind": {
+            "group": "etcd.database.coreos.com",
+            "version": "v1beta2",
+            "kind": "EtcdCluster"
+          },
+          "objects": [
+            "demo-etcd-cluster"
+          ]
+        }],
+        "operatorResources": [{
+          "groupVersionKind": {
+            "group": "apiextensions.k8s.io",
+            "version": "v1beta1",
+            "kind": "CustomResourceDefinition"
+          },
+          "objects": [
+            "etcdclusters.etcd.database.coreos.com"
+          ]
+        },
+          {
+            "groupVersionKind": {
+              "version": "v1",
+              "kind": "Service"
+            },
+            "objects": [
+              "etcd-restore-operator"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "version": "v1",
+              "kind": "ServiceAccount"
+            },
+            "objects": [
+              "demo-etcd-operator-etcd-operator-etcd-operator"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "group": "apps",
+              "version": "v1",
+              "kind": "Deployment"
+            },
+            "objects": [
+              "demo-etcd-operator-etcd-operator-etcd-backup-operator",
+              "demo-etcd-operator-etcd-operator-etcd-operator",
+              "demo-etcd-operator-etcd-operator-etcd-restore-operator"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "group": "rbac.authorization.k8s.io",
+              "version": "v1",
+              "kind": "ClusterRoleBinding"
+            },
+            "objects": [
+              "demo-etcd-operator-etcd-operator-etcd-operator"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "group": "rbac.authorization.k8s.io",
+              "version": "v1",
+              "kind": "ClusterRole"
+            },
+            "objects": [
+              "demo-etcd-operator-etcd-operator-etcd-operator"
+            ]
+          }
+        ],
+        "applicationResources": [{
+          "groupVersionKind": {
+            "group": "storage.k8s.io",
+            "version": "v1",
+            "kind": "StorageClass"
+          },
+          "objects": [
+            "csi-gce-pd"
+          ]
+        }],
+        "dataSnapshots": [{
+          "backupType": "Full",
+          "location": "BACKUPPLAN-UUID/BACKUP-UUID/operator/demo-etcd-cluster/data-snapshot/demo-etcd-cluster-5vs8z4blfl",
+          "persistentVolumeClaimName": "demo-etcd-cluster-5vs8z4blfl",
+          "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\"},\"creationTimestamp\":\"2021-09-21T06:49:30Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app\":\"etcd\",\"etcd_cluster\":\"demo-etcd-cluster\"},\"managedFields\":[{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:labels\":{\".\":{},\"f:app\":{},\"f:etcd_cluster\":{}},\"f:ownerReferences\":{\".\":{},\"k:{\\\"uid\\\":\\\"254cb1e8-392a-4021-b345-7dc75f47507b\\\"}\":{\".\":{},\"f:apiVersion\":{},\"f:controller\":{},\"f:kind\":{},\"f:name\":{},\"f:uid\":{}}}},\"f:spec\":{\"f:accessModes\":{},\"f:resources\":{\"f:requests\":{\".\":{},\"f:storage\":{}}},\"f:storageClassName\":{},\"f:volumeMode\":{}}},\"manager\":\"etcd-operator\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:49:30Z\"},{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:pv.kubernetes.io/bind-completed\":{},\"f:pv.kubernetes.io/bound-by-controller\":{},\"f:volume.beta.kubernetes.io/storage-provisioner\":{}}},\"f:spec\":{\"f:volumeName\":{}},\"f:status\":{\"f:accessModes\":{},\"f:capacity\":{\".\":{},\"f:storage\":{}},\"f:phase\":{}}},\"manager\":\"kube-controller-manager\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:49:34Z\"}],\"name\":\"demo-etcd-cluster-5vs8z4blfl\",\"namespace\":\"test-ns\",\"ownerReferences\":[{\"apiVersion\":\"etcd.database.coreos.com/v1beta2\",\"controller\":true,\"kind\":\"EtcdCluster\",\"name\":\"demo-etcd-cluster\",\"uid\":\"254cb1e8-392a-4021-b345-7dc75f47507b\"}],\"resourceVersion\":\"83485114\",\"selfLink\":\"/api/v1/namespaces/test-ns/persistentvolumeclaims/demo-etcd-cluster-5vs8z4blfl\",\"uid\":\"41c3785a-524a-4e49-9c20-922ffea174e5\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"2Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-41c3785a-524a-4e49-9c20-922ffea174e5\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"2Gi\"},\"phase\":\"Bound\"}}\n",
+          "volumeSnapshot": {
+            "volumeSnapshot": {
+              "kind": "VolumeSnapshot",
+              "namespace": "test-ns",
+              "name": "demo-etcd-cluster-5vs8z4bl-b87455bd-9875-4a15-9801-1e97669939d0",
+              "uid": "cf63217c-0377-49cb-8678-418aca78c065",
+              "apiVersion": "snapshot.storage.k8s.io/v1beta1",
+              "resourceVersion": "83492078"
+            },
+            "retryCount": 1,
+            "status": "Completed"
+          },
+          "snapshotSize": "2147483648",
+          "size": "147202048",
+          "uploaded": true,
+          "podContainersMap": [{
+            "podName": "demo-etcd-cluster-5vs8z4blfl",
+            "containers": [
+              "etcd"
+            ]
+          }],
+          "conditions": [{
+            "status": "InProgress",
+            "timestamp": "2021-09-21T06:56:33Z",
+            "reason": "Snapshot InProgress",
+            "phase": "Snapshot"
+          },
+            {
+              "status": "Completed",
+              "timestamp": "2021-09-21T06:57:07Z",
+              "reason": "Snapshot Completed",
+              "phase": "Snapshot"
+            },
+            {
+              "status": "InProgress",
+              "timestamp": "2021-09-21T06:57:07Z",
+              "reason": "Upload InProgress",
+              "phase": "Upload"
+            },
+            {
+              "status": "Completed",
+              "timestamp": "2021-09-21T06:58:34Z",
+              "reason": "Upload Completed",
+              "phase": "Upload"
             }
           ]
-        }
-      ],
-      "operators": [
-        {
-          "release": "mysql",
-          "revision": 1,
-          "resources": [
-            {
-              "groupVersionKind": {
-                "group": "apps",
-                "version": "v1",
-                "kind": "Deployment"
-              },
-              "objects": [
-                "mysql"
-              ]
-            },
-            {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "Secret"
-              },
-              "objects": [
-                "mysql",
-                "sh.helm.release.v1.mysql.v1"
-              ]
-            },
-            {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "ConfigMap"
-              },
-              "objects": [
-                "mysql-test"
-              ]
-            },
-            {
-              "groupVersionKind": {
-                "version": "v1",
-                "kind": "Service"
-              },
-              "objects": [
-                "helm-mysql-mysql"
-              ]
-            }
-          ],
-          "storageBackend": "Secret",
-          "version": "v3",
-          "dataSnapshots": [
-            {
-              "backupType": "Full",
-              "location": "BACKUPPLAN-UUID/BACKUP-UUID/helm/mysql/data-snapshot/mysql",
-              "persistentVolumeClaimName": "mysql",
-              "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"meta.helm.sh/release-name\":\"mysql\",\"meta.helm.sh/release-namespace\":\"temp-ns\",\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\",\"volume.kubernetes.io/selected-node\":\"gke-dev-cluster-dev-cluster-pool-eab0992b-0zp2\"},\"creationTimestamp\":\"2021-05-18T06:15:49Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app\":\"mysql\",\"app.kubernetes.io/managed-by\":\"Helm\",\"chart\":\"mysql-1.6.2\",\"heritage\":\"Helm\",\"release\":\"mysql\"},\"name\":\"mysql\",\"namespace\":\"temp-ns\",\"resourceVersion\":\"164398856\",\"selfLink\":\"/api/v1/namespaces/temp-ns/persistentvolumeclaims/mysql\",\"uid\":\"613be9f8-c4c8-4557-bd27-4f6c64629c7d\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"1Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-613be9f8-c4c8-4557-bd27-4f6c64629c7d\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"1Gi\"},\"phase\":\"Bound\"}}\n",
+        },
+          {
+            "backupType": "Full",
+            "location": "BACKUPPLAN-UUID/BACKUP-UUID/operator/demo-etcd-cluster/data-snapshot/demo-etcd-cluster-6gb5kdcvq6",
+            "persistentVolumeClaimName": "demo-etcd-cluster-6gb5kdcvq6",
+            "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\"},\"creationTimestamp\":\"2021-09-21T06:48:18Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app\":\"etcd\",\"etcd_cluster\":\"demo-etcd-cluster\"},\"managedFields\":[{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:labels\":{\".\":{},\"f:app\":{},\"f:etcd_cluster\":{}},\"f:ownerReferences\":{\".\":{},\"k:{\\\"uid\\\":\\\"254cb1e8-392a-4021-b345-7dc75f47507b\\\"}\":{\".\":{},\"f:apiVersion\":{},\"f:controller\":{},\"f:kind\":{},\"f:name\":{},\"f:uid\":{}}}},\"f:spec\":{\"f:accessModes\":{},\"f:resources\":{\"f:requests\":{\".\":{},\"f:storage\":{}}},\"f:storageClassName\":{},\"f:volumeMode\":{}}},\"manager\":\"etcd-operator\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:48:18Z\"},{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:pv.kubernetes.io/bind-completed\":{},\"f:pv.kubernetes.io/bound-by-controller\":{},\"f:volume.beta.kubernetes.io/storage-provisioner\":{}}},\"f:spec\":{\"f:volumeName\":{}},\"f:status\":{\"f:accessModes\":{},\"f:capacity\":{\".\":{},\"f:storage\":{}},\"f:phase\":{}}},\"manager\":\"kube-controller-manager\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:48:22Z\"}],\"name\":\"demo-etcd-cluster-6gb5kdcvq6\",\"namespace\":\"test-ns\",\"ownerReferences\":[{\"apiVersion\":\"etcd.database.coreos.com/v1beta2\",\"controller\":true,\"kind\":\"EtcdCluster\",\"name\":\"demo-etcd-cluster\",\"uid\":\"254cb1e8-392a-4021-b345-7dc75f47507b\"}],\"resourceVersion\":\"83484193\",\"selfLink\":\"/api/v1/namespaces/test-ns/persistentvolumeclaims/demo-etcd-cluster-6gb5kdcvq6\",\"uid\":\"da106206-b463-41ad-a6dc-45c4b96dac15\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"2Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-da106206-b463-41ad-a6dc-45c4b96dac15\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"2Gi\"},\"phase\":\"Bound\"}}\n",
+            "volumeSnapshot": {
               "volumeSnapshot": {
-                "volumeSnapshot": {
-                  "kind": "VolumeSnapshot",
-                  "namespace": "temp-ns",
-                  "name": "mysql-9d654196-0cd6-4d5b-944f-785b6e44d495",
-                  "uid": "3fc7b7c9-43f8-45f2-a342-b2fbcd8474b2",
-                  "apiVersion": "snapshot.storage.k8s.io/v1beta1",
-                  "resourceVersion": "164465258"
-                },
-                "retryCount": 1,
-                "status": "Completed"
+                "kind": "VolumeSnapshot",
+                "namespace": "test-ns",
+                "name": "demo-etcd-cluster-6gb5kdcv-f3a235f2-9d93-4587-9de4-d548f8728e64",
+                "uid": "3e145f4e-0f05-426a-aba3-8dbe9d9d39c2",
+                "apiVersion": "snapshot.storage.k8s.io/v1beta1",
+                "resourceVersion": "83492004"
               },
-              "snapshotSize": "1073741824",
-              "size": "238886912",
-              "uploaded": true,
-              "podContainersMap": [
-                {
-                  "podName": "mysql-7df4dccf76-9sgxd",
-                  "containers": [
-                    "mysql"
-                  ]
-                }
-              ],
-              "conditions": [
-                {
-                  "status": "InProgress",
-                  "timestamp": "2021-05-18T17:39:35Z",
-                  "reason": "Snapshot InProgress",
-                  "phase": "Snapshot"
-                },
-                {
-                  "status": "Completed",
-                  "timestamp": "2021-05-18T17:41:12Z",
-                  "reason": "Snapshot Completed",
-                  "phase": "Snapshot"
-                },
-                {
-                  "status": "InProgress",
-                  "timestamp": "2021-05-18T17:41:12Z",
-                  "reason": "Upload InProgress",
-                  "phase": "Upload"
-                },
-                {
-                  "status": "Completed",
-                  "timestamp": "2021-05-18T17:43:06Z",
-                  "reason": "Upload Completed",
-                  "phase": "Upload"
-                }
+              "retryCount": 1,
+              "status": "Completed"
+            },
+            "snapshotSize": "2147483648",
+            "size": "147333120",
+            "uploaded": true,
+            "podContainersMap": [{
+              "podName": "demo-etcd-cluster-6gb5kdcvq6",
+              "containers": [
+                "etcd"
               ]
+            }],
+            "conditions": [{
+              "status": "InProgress",
+              "timestamp": "2021-09-21T06:56:33Z",
+              "reason": "Snapshot InProgress",
+              "phase": "Snapshot"
+            },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T06:57:05Z",
+                "reason": "Snapshot Completed",
+                "phase": "Snapshot"
+              },
+              {
+                "status": "InProgress",
+                "timestamp": "2021-09-21T06:57:05Z",
+                "reason": "Upload InProgress",
+                "phase": "Upload"
+              },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T06:58:46Z",
+                "reason": "Upload Completed",
+                "phase": "Upload"
+              }
+            ]
+          },
+          {
+            "backupType": "Full",
+            "location": "BACKUPPLAN-UUID/BACKUP-UUID/operator/demo-etcd-cluster/data-snapshot/demo-etcd-cluster-ppqdp9mznf",
+            "persistentVolumeClaimName": "demo-etcd-cluster-ppqdp9mznf",
+            "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\"},\"creationTimestamp\":\"2021-09-21T06:48:50Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app\":\"etcd\",\"etcd_cluster\":\"demo-etcd-cluster\"},\"managedFields\":[{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:labels\":{\".\":{},\"f:app\":{},\"f:etcd_cluster\":{}},\"f:ownerReferences\":{\".\":{},\"k:{\\\"uid\\\":\\\"254cb1e8-392a-4021-b345-7dc75f47507b\\\"}\":{\".\":{},\"f:apiVersion\":{},\"f:controller\":{},\"f:kind\":{},\"f:name\":{},\"f:uid\":{}}}},\"f:spec\":{\"f:accessModes\":{},\"f:resources\":{\"f:requests\":{\".\":{},\"f:storage\":{}}},\"f:storageClassName\":{},\"f:volumeMode\":{}}},\"manager\":\"etcd-operator\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:48:50Z\"},{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:pv.kubernetes.io/bind-completed\":{},\"f:pv.kubernetes.io/bound-by-controller\":{},\"f:volume.beta.kubernetes.io/storage-provisioner\":{}}},\"f:spec\":{\"f:volumeName\":{}},\"f:status\":{\"f:accessModes\":{},\"f:capacity\":{\".\":{},\"f:storage\":{}},\"f:phase\":{}}},\"manager\":\"kube-controller-manager\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:48:54Z\"}],\"name\":\"demo-etcd-cluster-ppqdp9mznf\",\"namespace\":\"test-ns\",\"ownerReferences\":[{\"apiVersion\":\"etcd.database.coreos.com/v1beta2\",\"controller\":true,\"kind\":\"EtcdCluster\",\"name\":\"demo-etcd-cluster\",\"uid\":\"254cb1e8-392a-4021-b345-7dc75f47507b\"}],\"resourceVersion\":\"83484608\",\"selfLink\":\"/api/v1/namespaces/test-ns/persistentvolumeclaims/demo-etcd-cluster-ppqdp9mznf\",\"uid\":\"fc5dba07-6c36-4177-929a-6468aa1505a7\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"2Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-fc5dba07-6c36-4177-929a-6468aa1505a7\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"2Gi\"},\"phase\":\"Bound\"}}\n",
+            "volumeSnapshot": {
+              "volumeSnapshot": {
+                "kind": "VolumeSnapshot",
+                "namespace": "test-ns",
+                "name": "demo-etcd-cluster-ppqdp9mz-6fdf54f1-5ab9-4869-a462-5c882989263f",
+                "uid": "3ccc9a55-b540-43ef-b70f-6fd3c232af9a",
+                "apiVersion": "snapshot.storage.k8s.io/v1beta1",
+                "resourceVersion": "83492058"
+              },
+              "retryCount": 1,
+              "status": "Completed"
+            },
+            "snapshotSize": "2147483648",
+            "size": "147267584",
+            "uploaded": true,
+            "podContainersMap": [{
+              "podName": "demo-etcd-cluster-ppqdp9mznf",
+              "containers": [
+                "etcd"
+              ]
+            }],
+            "conditions": [{
+              "status": "InProgress",
+              "timestamp": "2021-09-21T06:56:33Z",
+              "reason": "Snapshot InProgress",
+              "phase": "Snapshot"
+            },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T06:57:07Z",
+                "reason": "Snapshot Completed",
+                "phase": "Snapshot"
+              },
+              {
+                "status": "InProgress",
+                "timestamp": "2021-09-21T06:57:07Z",
+                "reason": "Upload InProgress",
+                "phase": "Upload"
+              },
+              {
+                "status": "Completed",
+                "timestamp": "2021-09-21T07:00:01Z",
+                "reason": "Upload Completed",
+                "phase": "Upload"
+              }
+            ]
+          }
+        ]
+      }],
+      "custom": {
+        "resources": [{
+          "groupVersionKind": {
+            "version": "v1",
+            "kind": "Service"
+          },
+          "objects": [
+            "k8s-demo-app-frontend",
+            "k8s-demo-app-mysql"
+          ]
+        },
+          {
+            "groupVersionKind": {
+              "version": "v1",
+              "kind": "Secret"
+            },
+            "objects": [
+              "mysql-pass"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "group": "apps",
+              "version": "v1",
+              "kind": "Deployment"
+            },
+            "objects": [
+              "k8s-demo-app-frontend",
+              "k8s-demo-app-mysql"
+            ]
+          },
+          {
+            "groupVersionKind": {
+              "group": "storage.k8s.io",
+              "version": "v1",
+              "kind": "StorageClass"
+            },
+            "objects": [
+              "csi-gce-pd"
+            ]
+          }
+        ],
+        "dataSnapshots": [{
+          "backupType": "Full",
+          "location": "BACKUPPLAN-UUID/BACKUP-UUID/custom/data-snapshot/mysql-pv-claim",
+          "persistentVolumeClaimName": "mysql-pv-claim",
+          "persistentVolumeClaimMetadata": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{\"kubectl.kubernetes.io/last-applied-configuration\":\"{\\\"apiVersion\\\":\\\"v1\\\",\\\"kind\\\":\\\"PersistentVolumeClaim\\\",\\\"metadata\\\":{\\\"annotations\\\":{},\\\"labels\\\":{\\\"app\\\":\\\"k8s-demo-app\\\",\\\"tier\\\":\\\"mysql\\\"},\\\"name\\\":\\\"mysql-pv-claim\\\",\\\"namespace\\\":\\\"test-ns\\\"},\\\"spec\\\":{\\\"accessModes\\\":[\\\"ReadWriteOnce\\\"],\\\"resources\\\":{\\\"requests\\\":{\\\"storage\\\":\\\"5Gi\\\"}},\\\"storageClassName\\\":\\\"csi-gce-pd\\\"}}\\n\",\"pv.kubernetes.io/bind-completed\":\"yes\",\"pv.kubernetes.io/bound-by-controller\":\"yes\",\"volume.beta.kubernetes.io/storage-provisioner\":\"pd.csi.storage.gke.io\"},\"creationTimestamp\":\"2021-09-21T06:42:35Z\",\"finalizers\":[\"kubernetes.io/pvc-protection\"],\"labels\":{\"app\":\"k8s-demo-app\",\"tier\":\"mysql\"},\"managedFields\":[{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:kubectl.kubernetes.io/last-applied-configuration\":{}},\"f:labels\":{\".\":{},\"f:app\":{},\"f:tier\":{}}},\"f:spec\":{\"f:accessModes\":{},\"f:resources\":{\"f:requests\":{\".\":{},\"f:storage\":{}}},\"f:storageClassName\":{},\"f:volumeMode\":{}}},\"manager\":\"kubectl-client-side-apply\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:42:35Z\"},{\"apiVersion\":\"v1\",\"fieldsType\":\"FieldsV1\",\"fieldsV1\":{\"f:metadata\":{\"f:annotations\":{\"f:pv.kubernetes.io/bind-completed\":{},\"f:pv.kubernetes.io/bound-by-controller\":{},\"f:volume.beta.kubernetes.io/storage-provisioner\":{}}},\"f:spec\":{\"f:volumeName\":{}},\"f:status\":{\"f:accessModes\":{},\"f:capacity\":{\".\":{},\"f:storage\":{}},\"f:phase\":{}}},\"manager\":\"kube-controller-manager\",\"operation\":\"Update\",\"time\":\"2021-09-21T06:42:39Z\"}],\"name\":\"mysql-pv-claim\",\"namespace\":\"test-ns\",\"resourceVersion\":\"83480057\",\"selfLink\":\"/api/v1/namespaces/test-ns/persistentvolumeclaims/mysql-pv-claim\",\"uid\":\"155b59bf-34e3-4b77-8a19-2fae3a0dba32\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"5Gi\"}},\"storageClassName\":\"csi-gce-pd\",\"volumeMode\":\"Filesystem\",\"volumeName\":\"pvc-155b59bf-34e3-4b77-8a19-2fae3a0dba32\"},\"status\":{\"accessModes\":[\"ReadWriteOnce\"],\"capacity\":{\"storage\":\"5Gi\"},\"phase\":\"Bound\"}}\n",
+          "volumeSnapshot": {
+            "volumeSnapshot": {
+              "kind": "VolumeSnapshot",
+              "namespace": "test-ns",
+              "name": "mysql-pv-claim-7a9966d5-721b-4384-b92f-431dbdbd3f45",
+              "uid": "68252593-450e-4666-9308-5c3e68c183b3",
+              "apiVersion": "snapshot.storage.k8s.io/v1beta1",
+              "resourceVersion": "83492022"
+            },
+            "retryCount": 1,
+            "status": "Completed"
+          },
+          "snapshotSize": "5368709120",
+          "size": "126033920",
+          "uploaded": true,
+          "podContainersMap": [{
+            "podName": "k8s-demo-app-mysql-754f46dbd7-8xsnv",
+            "containers": [
+              "mysql"
+            ]
+          }],
+          "conditions": [{
+            "status": "InProgress",
+            "timestamp": "2021-09-21T06:56:33Z",
+            "reason": "Snapshot InProgress",
+            "phase": "Snapshot"
+          },
+            {
+              "status": "Completed",
+              "timestamp": "2021-09-21T06:57:06Z",
+              "reason": "Snapshot Completed",
+              "phase": "Snapshot"
+            },
+            {
+              "status": "InProgress",
+              "timestamp": "2021-09-21T06:57:06Z",
+              "reason": "Upload InProgress",
+              "phase": "Upload"
+            },
+            {
+              "status": "Completed",
+              "timestamp": "2021-09-21T06:58:46Z",
+              "reason": "Upload Completed",
+              "phase": "Upload"
             }
           ]
-        }
-      ]
+        }],
+        "warnings": [
+          "Found Dependant Resource:\nGVK: [storage.k8s.io/v1, Kind=StorageClass]\nName: [csi-gce-pd]\n"
+        ]
+      }
     },
-    "condition": [
-      {
-        "status": "InProgress",
-        "timestamp": "2021-05-18T17:39:21Z",
-        "reason": "MetaSnapshot InProgress",
-        "phase": "MetaSnapshot"
-      },
+    "condition": [{
+      "status": "InProgress",
+      "timestamp": "2021-09-21T06:55:53Z",
+      "reason": "MetaSnapshot InProgress",
+      "phase": "MetaSnapshot"
+    },
       {
         "status": "Completed",
-        "timestamp": "2021-05-18T17:39:35Z",
+        "timestamp": "2021-09-21T06:56:32Z",
         "reason": "MetaSnapshot Completed",
         "phase": "MetaSnapshot"
       },
       {
         "status": "InProgress",
-        "timestamp": "2021-05-18T17:39:35Z",
+        "timestamp": "2021-09-21T06:56:32Z",
         "reason": "DataSnapshot InProgress",
         "phase": "DataSnapshot"
       },
       {
-        "status": "Completed",
-        "timestamp": "2021-05-18T17:41:12Z",
-        "reason": "DataSnapshot Completed",
-        "phase": "DataSnapshot"
-      },
-      {
         "status": "InProgress",
-        "timestamp": "2021-05-18T17:41:12Z",
+        "timestamp": "2021-09-21T06:57:02Z",
         "reason": "DataUpload InProgress",
         "phase": "DataUpload"
       },
       {
         "status": "Completed",
-        "timestamp": "2021-05-18T17:43:06Z",
+        "timestamp": "2021-09-21T06:57:07Z",
+        "reason": "DataSnapshot Completed",
+        "phase": "DataSnapshot"
+      },
+      {
+        "status": "Completed",
+        "timestamp": "2021-09-21T07:00:01Z",
         "reason": "DataUpload Completed",
         "phase": "DataUpload"
       },
       {
         "status": "InProgress",
-        "timestamp": "2021-05-18T17:43:06Z",
+        "timestamp": "2021-09-21T07:00:01Z",
         "reason": "MetadataUpload InProgress",
         "phase": "MetadataUpload"
       },
       {
         "status": "Completed",
-        "timestamp": "2021-05-18T17:43:18Z",
+        "timestamp": "2021-09-21T07:00:08Z",
         "reason": "MetadataUpload Completed",
         "phase": "MetadataUpload"
       }
     ],
     "stats": {
-      "target": {
+      "targetInfo": {
         "target": {
           "kind": "Target",
-          "namespace": "temp-ns",
+          "namespace": "test-ns",
           "name": "sample-target",
-          "uid": "018311c7-d7ab-4dc2-b903-cc00932271f6",
+          "uid": "54143650-f80a-4e1c-a206-9ecc8d3bcaf7",
           "apiVersion": "triliovault.trilio.io/v1",
-          "resourceVersion": "164460692"
+          "resourceVersion": "83487241"
         },
-        "hookExists": false
-      }
+        "type": "NFS",
+        "vendor": "Other"
+      },
+      "hookExists": false
     }
   }
 }
